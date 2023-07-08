@@ -16,4 +16,10 @@ export default async function llm(
     return stdout;
 }
 
-llm("./open_llama-ggml-q4_0.bin", "Q: What is 2+2? A:", ["\n"]);
+function main() {
+    llm("./open_llama-ggml-q4_0.bin", "Q: What is 2+2? A:", ["\n"]);
+}
+
+if (typeof require !== 'undefined' && require.main === module) {
+    main();
+}
