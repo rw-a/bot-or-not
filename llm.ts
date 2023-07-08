@@ -1,17 +1,19 @@
-import { execSync } from "child_process";
+import child_process from "child_process";
+import util from 'util';
 
-export default function llm(
+const exec = util.promisify(child_process.exec);
+
+export default async function llm(
         model_path: string, 
         prompt: string, 
         stop: string[] = [], 
         max_tokens: number = 128) {
     
-    const stops = stop.map((stop_prompt) => "-r " + stop_prompt);
-    // const output = spawnSync("./llama-cpp", [`-m "${model_path}"`, `-n ${max_tokens}`, `-p "${prompt}"`]);
-    const command = `./llama-cpp -m "${model_path}" -n ${max_tokens} -p "${prompt}" ${stops.join("")}`;
-    const output = execSync(command);
-    console.log(output.toString());
-    return output;
+    const stop_prompts = stop.map((stop_prompt) => `-r "${stop_prompt}"`).join(" ");
+    const command = `./llama-cpp -m "${model_path}" -n ${max_tokens} -p "${prompt}" ${stop_prompts}`;
+    
+    const { stdout, stderr} = await exec(command);
+    return stdout;
 }
 
-llm("./open_llama-ggml-q4_0.bin", "Q: What is 2+2? A:", [], 32);
+llm("./open_llama-ggml-q4_0.bin", "Q: What is 2+2? A:", ["\n"]);
