@@ -1,0 +1,19 @@
+{
+  "name": "bot-or-not-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@llama-node/llama-cpp": "^0.1.6",
+    "express": "^4.18.2",
+    "llama-node": "^0.1.6",
+    "socket.io": "^4.7.1"
+  }
+}
