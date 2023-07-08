@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { execSync } from "child_process";
 
 export default function llm(
         model_path: string, 
@@ -6,23 +6,12 @@ export default function llm(
         stop: string[] = [], 
         max_tokens: number = 128) {
     
-    const stops = stop.map((stop_prompt) => "-r " + stop_prompt).join(" ");
-
-    const command = `./main -m ${model_path} -n ${max_tokens} -p "${prompt} ${stops}"`;
-    console.log(command);
-    
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.log(`error: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return;
-        }
-        console.log(`stdout: ${stdout}`);
-    });
-    
+    const stops = stop.map((stop_prompt) => "-r " + stop_prompt);
+    // const output = spawnSync("./llama-cpp", [`-m "${model_path}"`, `-n ${max_tokens}`, `-p "${prompt}"`]);
+    const command = `./llama-cpp -m "${model_path}" -n ${max_tokens} -p "${prompt}" ${stops.join("")}`;
+    const output = execSync(command);
+    console.log(output.toString());
+    return output;
 }
 
-// llm("open_llama-ggml-q4_0.bin", "Q: What is 2+2?");
+llm("./open_llama-ggml-q4_0.bin", "Q: What is 2+2? A:", [], 32);
