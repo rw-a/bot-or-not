@@ -4,11 +4,16 @@ import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData } from "./types";
 
-const WS_PORT = 3000;
+const SERVER_PORT = 5173;
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server);
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>({
+  cors: {
+    origin: `http://localhost:${SERVER_PORT}`
+  }
+});
+io.listen(3000);
 
 /*
 app.get('/', (req, res) => {
@@ -16,9 +21,10 @@ app.get('/', (req, res) => {
 }); */
 
 io.on('connection', (socket) => {
-  console.log('A user connected', socket);
+  console.log('A user connected', socket.data);
+  socket.emit("foo", "Hi");
 });
 
-ViteExpress.listen(app, WS_PORT, () => {
-  console.log(`Server initialised. Listening on port ${WS_PORT}...`)
+ViteExpress.listen(app, SERVER_PORT, () => {
+  console.log(`Starting server on port ${SERVER_PORT}...`)
 });

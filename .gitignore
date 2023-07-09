@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# LLM Files
+src/server/*
+!src/server/**/
+!src/server/*.*
+*.bin
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
