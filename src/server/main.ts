@@ -2,18 +2,19 @@ import http from 'http';
 import express from 'express';
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
+import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData } from "./types";
+import { WS_PORT } from '../config';
 
-const SERVER_PORT = 5173;
-
+dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>({
   cors: {
-    origin: `http://localhost:${SERVER_PORT}`
+    origin: `http://localhost:${process.env.SERVER_PORT}`
   }
 });
-io.listen(3000);
+io.listen(WS_PORT);
 
 /*
 app.get('/', (req, res) => {
@@ -25,6 +26,6 @@ io.on('connection', (socket) => {
   socket.emit("foo", "Hi");
 });
 
-ViteExpress.listen(app, SERVER_PORT, () => {
-  console.log(`Starting server on port ${SERVER_PORT}...`)
+ViteExpress.listen(app, Number(process.env.SERVER_PORT), () => {
+  console.log(`Starting server on port ${process.env.SERVER_PORT}...`)
 });
