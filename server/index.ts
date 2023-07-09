@@ -15,6 +15,8 @@ io.on('connection', (socket) => {
   console.log('A user connected', socket);
 });
 
+/*
 server.listen(3000, () => {
   console.log('Hosting server on port: 3000');
 });
+*/
