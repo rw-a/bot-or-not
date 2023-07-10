@@ -5,5 +5,5 @@ import { WS_PORT } from '../config';
 const URL = process.env.NODE_ENV === 'production' ? undefined : `http://localhost:${WS_PORT}`;
 
 export const socket = io(URL, {
-    autoConnect: false
+    // autoConnect: false
 });

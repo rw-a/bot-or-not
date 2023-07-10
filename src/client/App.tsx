@@ -60,7 +60,6 @@ function App() {
   const [username, setUsername] = useState("");
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [fooEvents, setFooEvents] = useState([] as string[]);
 
   useEffect(() => {
     // Attempt login
@@ -101,13 +100,11 @@ function App() {
     userID.current = generateId();
     setUsername(newUsername);
 
-    socket.auth = {
-      roomID: roomCode,
-      userID: userID.current,
-      username: newUsername,
-      create: create
+    if (create) {
+      socket.emit("create", roomCode, userID.current, newUsername);
+    } else {
+      socket.emit("join", roomCode, userID.current, newUsername);
     }
-    socket.connect();
   }
 
   return (
