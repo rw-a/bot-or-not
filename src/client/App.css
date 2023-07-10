@@ -2,3 +2,13 @@
   max-width: 720px;
   margin: 0 auto;
 }
+
+p {
+  margin: 0;
+}
+
+#join-type-selector {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}

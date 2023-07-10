@@ -1,41 +1,118 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { socket } from './socket';
 import './App.css'
 
+
+function generateId (len?: number) {
+  var arr = new Uint8Array((len || 40) / 2)
+  window.crypto.getRandomValues(arr)
+  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
+}
+
+interface LoginFormProps {
+  onLogin: (roomCode: string, newUsername: string, create: boolean) => void
+}
+
+function LoginForm({onLogin}: LoginFormProps) {
+  /* TODO: add validation */
+
+  const [username, setUsername] = useState("");
+  const [roomID, setRoomID] = useState("");
+
+  function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
+    setUsername(event.currentTarget.value);
+  }
+
+  function handleRoomIDChange(event: React.FormEvent<HTMLInputElement>) {
+    setRoomID(event.currentTarget.value);
+  }
+
+  function handleLogin() {
+    onLogin(roomID, username, false);
+  }
+
+  function handleCreate() {
+    onLogin(generateId(), username, true);
+  }
+
+  return (
+    <div>
+      <p>Username</p>
+      <input type="text" value={username} onChange={handleUsernameChange}></input>
+      <div id="join-type-selector">
+        <div>
+          <label>Room Code</label>
+          <input type="text" value={roomID} onChange={handleRoomIDChange}></input>
+          <br></br>
+          <button onClick={handleLogin}>Join Room</button>
+        </div>
+        <div>
+          <button onClick={handleCreate}>Create Room</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
-  const [isConnected, setIsConnected] = useState(socket.connected);
+  const roomId = useRef("");
+  const userID = useRef("");
+  const [username, setUsername] = useState("");
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [fooEvents, setFooEvents] = useState([] as string[]);
 
   useEffect(() => {
-    function onConnect() {
-      setIsConnected(true);
+    // Attempt login
+    const storedSessionID = localStorage.getItem("sessionID");
+    if (storedSessionID) {
+      setIsAuthenticated(true);
+      socket.auth = {
+        sessionID: storedSessionID 
+      };
+      socket.connect();
+    } 
+
+    function loginCallback() {
+      setIsAuthenticated(true);
     }
 
     function onDisconnect() {
-      setIsConnected(false);
+      setIsAuthenticated(false);
     }
 
-    function onFooEvent(value: string) {
-      console.log(value);
-      setFooEvents(previous => [...previous, value]);
+    function onConnectError(err: Error) {
+      console.log(err);
     }
 
-    socket.on('connect', onConnect);
+    socket.on('loginCallback', loginCallback);
+    socket.on('connect_error', onConnectError);
     socket.on('disconnect', onDisconnect);
-    socket.on('foo', onFooEvent);
 
     return () => {
-      socket.off('connect', onConnect);
+      socket.off('loginCallback', loginCallback);
+      socket.off('connect_error', onConnectError);
       socket.off('disconnect', onDisconnect);
-      socket.off('foo', onFooEvent);
     };
   }, []);
 
+  function onLogin(roomCode: string, newUsername: string, create: boolean) {
+    roomId.current = roomCode;
+    userID.current = generateId();
+    setUsername(newUsername);
+
+    socket.auth = {
+      roomID: roomCode,
+      userID: userID.current,
+      username: newUsername,
+      create: create
+    }
+    socket.connect();
+  }
+
   return (
     <>
-      <p>Nice</p>
-      <button onClick={() => socket.emit("connection", "Hi")}>Connect</button>
-      {fooEvents.forEach((value) => <p>{value}</p>)}
+      {(!isAuthenticated) ? <LoginForm onLogin={onLogin}></LoginForm> : "Logged In"}
     </>
   )
 }
