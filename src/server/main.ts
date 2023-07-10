@@ -1,9 +1,16 @@
+import crypto from "crypto";
 import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData } from "./types";
-import { WS_PORT } from '../config';
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, UserData } from "./types";
+import { WS_PORT } from "../config";
+
+function generateID(len?: number) {
+  var arr = new Uint8Array((len || 40) / 2)
+  crypto.getRandomValues(arr)
+  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
+}
 
 dotenv.config();
 
@@ -15,14 +22,31 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 });
 io.listen(WS_PORT);
 
+const DATABASE = new Map<string, Map<string, Map<keyof UserData, string | boolean | number>>>();
 
 io.on("connect", (socket) => {
+  socket.on("generateRoomID", (callback: (roomID: string) => void) => {
+    // Generate roomID until an unonccupied one is found
+    let roomID;
+    do {
+      roomID = generateID(6).toUpperCase();
+    } while (DATABASE.has(roomID))
+
+    callback(roomID);
+  });
+
   socket.on("create", (roomID: string, userID: string, username: string) => {
-    
+    if (DATABASE.has(roomID)) {
+      socket.emit("loginCallback", false, "Room")
+    }
   });
 
   socket.on("join", (roomID: string, userID: string, username: string) => {
     
+  });
+
+  socket.onAny((event, ...args) => {
+    console.log(event, args);
   });
 });
 

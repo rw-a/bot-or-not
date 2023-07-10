@@ -1,10 +1,11 @@
 export interface ServerToClientEvents {
-    
-  }
+  loginCallback: (success: boolean, errorMessage?: string) => void
+}
   
 export interface ClientToServerEvents {
-  join: (roomID: string, userID: string, username: string) => void;
-  create: (roomID: string, userID: string, username: string) => void;
+  generateRoomID: (callback: (roomID: string) => void) => void
+  create: (roomID: string, userID: string, username: string) => void
+  join: (roomID: string, userID: string, username: string) => void
 }
 
 export interface InterServerEvents {
@@ -12,8 +13,13 @@ export interface InterServerEvents {
 }
 
 export interface SocketData {
-  roomID: string,
-  userID: string,
-  username: string,
-  create: boolean
+
+}
+
+export interface UserData {
+  username: string
+  ready: boolean
+  answer: string
+  votes: number
+  vote: string
 }

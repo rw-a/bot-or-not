@@ -2,18 +2,18 @@ import { useEffect, useState, useRef } from 'react';
 import { socket } from './socket';
 import './App.css'
 
-
-function generateId (len?: number) {
+function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
   window.crypto.getRandomValues(arr)
   return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
 }
 
-interface LoginFormProps {
+
+interface LoginPageProps {
   onLogin: (roomCode: string, newUsername: string, create: boolean) => void
 }
 
-function LoginForm({onLogin}: LoginFormProps) {
+function LoginPage({onLogin}: LoginPageProps) {
   /* TODO: add validation */
 
   const [username, setUsername] = useState("");
@@ -31,14 +31,17 @@ function LoginForm({onLogin}: LoginFormProps) {
     onLogin(roomID, username, false);
   }
 
-  function handleCreate() {
-    onLogin(generateId(), username, true);
+  async function handleCreate() {
+    const roomID: string = await socket.emitWithAck("generateRoomID");
+    onLogin(roomID, username, true);
   }
 
   return (
     <div>
-      <p>Username</p>
-      <input type="text" value={username} onChange={handleUsernameChange}></input>
+      <div>
+        <p>Username</p>
+        <input type="text" value={username} onChange={handleUsernameChange}></input>
+      </div>
       <div id="join-type-selector">
         <div>
           <label>Room Code</label>
@@ -51,6 +54,13 @@ function LoginForm({onLogin}: LoginFormProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function GamePage() {
+  return (
+    <>
+    </>
   );
 }
 
@@ -72,8 +82,13 @@ function App() {
       socket.connect();
     } 
 
-    function loginCallback() {
-      setIsAuthenticated(true);
+    function loginCallback(success: boolean, errorMessage: string) {
+      if (success) {
+        setIsAuthenticated(true);
+      } else {
+        /* TODO: Make element */
+        console.log(errorMessage);
+      }
     }
 
     function onDisconnect() {
@@ -88,6 +103,10 @@ function App() {
     socket.on('connect_error', onConnectError);
     socket.on('disconnect', onDisconnect);
 
+    socket.onAny((event, ...args) => {
+      console.log(event, args);
+    });
+
     return () => {
       socket.off('loginCallback', loginCallback);
       socket.off('connect_error', onConnectError);
@@ -95,21 +114,24 @@ function App() {
     };
   }, []);
 
-  function onLogin(roomCode: string, newUsername: string, create: boolean) {
-    roomId.current = roomCode;
-    userID.current = generateId();
+  function onLogin(newRoomID: string, newUsername: string, create: boolean) {
+    roomId.current = newRoomID;
+    userID.current = generateID();
     setUsername(newUsername);
 
     if (create) {
-      socket.emit("create", roomCode, userID.current, newUsername);
+      socket.emit("create", newRoomID, userID.current, newUsername);
     } else {
-      socket.emit("join", roomCode, userID.current, newUsername);
+      socket.emit("join", newRoomID, userID.current, newUsername);
     }
   }
 
   return (
     <>
-      {(!isAuthenticated) ? <LoginForm onLogin={onLogin}></LoginForm> : "Logged In"}
+      {(!isAuthenticated) ? 
+      <LoginPage onLogin={onLogin}></LoginPage> : 
+      <GamePage></GamePage>
+      }
     </>
   )
 }
