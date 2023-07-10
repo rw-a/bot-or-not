@@ -59,22 +59,28 @@ function LoginPage({onLogin}: LoginPageProps) {
 
 interface GamePageProps {
   usernames: string[]
+  roomID: string
 }
 
-function GamePage({usernames}: GamePageProps) {
+function GamePage({usernames, roomID}: GamePageProps) {
   return (
     <div>
-      <div id="side-panel">
-        {usernames.map((username) => <p key={username}>{username}</p>)}
+      <div id="top-bar">
+        <p>{roomID}</p>
       </div>
-      <div id="main-panel"></div>
+      <div>
+        <div id="side-panel">
+          {usernames.map((username) => <p key={username}>{username}</p>)}
+        </div>
+        <div id="main-panel"></div>
+      </div>
     </div>
   );
 }
 
 function App() {
-  const roomID = useRef("");
   const userID = useRef("");
+  const [roomID, setRoomID] = useState("");
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [usernames, setUsernames] = useState([] as string[]);
@@ -91,6 +97,10 @@ function App() {
       socket.connect();
     } 
 
+    function onConnectError(err: Error) {
+      console.log(err);
+    }
+
     function loginError(errorMessage: string) {
       /* TODO: Make element */
       console.log(errorMessage);
@@ -101,16 +111,17 @@ function App() {
       setIsAuthenticated(true);
     }
 
+    function userJoined(newUsername: string) {
+      setUsernames((previous) => [...previous, newUsername]);
+    }
+
     function onDisconnect() {
       setIsAuthenticated(false);
     }
 
-    function onConnectError(err: Error) {
-      console.log(err);
-    }
-
     socket.on('loginError', loginError);
     socket.on('loginSuccess', loginSuccess);
+    socket.on('userJoined', userJoined);
     socket.on('connect_error', onConnectError);
     socket.on('disconnect', onDisconnect);
 
@@ -121,20 +132,21 @@ function App() {
     return () => {
       socket.off('loginError', loginError);
       socket.off('loginSuccess', loginSuccess);
+      socket.off('userJoined', userJoined);
       socket.off('connect_error', onConnectError);
       socket.off('disconnect', onDisconnect);
     };
   }, []);
 
-  function onLogin(newRoomID: string, username: string, create: boolean) {
-    roomID.current = newRoomID;
+  function onLogin(newRoomID: string, newUsername: string, create: boolean) {
     userID.current = generateID();
-    setUsernames([username]);
+    setRoomID(newRoomID);
+    setUsernames([newUsername]);
 
     if (create) {
-      socket.emit("create", newRoomID, userID.current, username);
+      socket.emit("create", newRoomID, userID.current, newUsername);
     } else {
-      socket.emit("join", newRoomID, userID.current, username);
+      socket.emit("join", newRoomID, userID.current, newUsername);
     }
   }
 
@@ -142,7 +154,7 @@ function App() {
     <>
       {(!isAuthenticated) ? 
       <LoginPage onLogin={onLogin}></LoginPage> : 
-      <GamePage usernames={usernames}></GamePage>
+      <GamePage usernames={usernames} roomID={roomID}></GamePage>
       }
     </>
   )

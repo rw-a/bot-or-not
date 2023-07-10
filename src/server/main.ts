@@ -78,6 +78,7 @@ io.on("connect", (socket) => {
 
     socket.join(roomID);
     socket.emit("loginSuccess", otherUsernames);
+    socket.broadcast.to(roomID).emit("userJoined", username);
   });
 
   socket.onAny((event, ...args) => {

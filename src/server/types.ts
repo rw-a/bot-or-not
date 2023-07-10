@@ -1,6 +1,7 @@
 export interface ServerToClientEvents {
   loginError: (errorMessage: string) => void
   loginSuccess: (otherUsernames: string[]) => void
+  userJoined: (username: string) => void
 }
   
 export interface ClientToServerEvents {
