@@ -23,3 +23,5 @@ export interface UserData {
   votes: number
   vote: string
 }
+
+export type UserDataMap = Map<keyof UserData, string | boolean | number>;
