@@ -3,7 +3,7 @@ import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, UserDataMap } from "./types";
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, UserData } from "./types";
 import { WS_PORT } from "../config";
 
 function generateID(len?: number) {
@@ -22,7 +22,11 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 });
 io.listen(WS_PORT);
 
-const DATABASE = new Map<string, Map<string, UserDataMap>>();
+const DATABASE: {
+  [key:string]: {
+    [key:string]: UserData
+  }
+} = {};
 
 io.on("connect", (socket) => {
   socket.on("generateRoomID", (callback: (roomID: string) => void) => {
@@ -30,37 +34,45 @@ io.on("connect", (socket) => {
     let roomID;
     do {
       roomID = generateID(6).toUpperCase();
-    } while (DATABASE.has(roomID))
+    } while (DATABASE.hasOwnProperty(roomID));
 
     callback(roomID);
   });
 
   socket.on("create", (roomID: string, userID: string, username: string) => {
-    if (DATABASE.has(roomID)) {
+    if (DATABASE.hasOwnProperty(roomID)) {
       // This shouldn't happen since room code is checked on generation
       socket.emit("loginCallback", false, "Room already exists.");
       return;
     }
-    
-    const userData: UserDataMap = new Map();
-    userData.set("username", username);
 
-    const roomData = new Map<string, UserDataMap>();
-    roomData.set(userID, userData);
+    DATABASE[roomID] = {
+      userID: {
+        username: username,
+        ready: false,
+        votes: 0
+      }
+    };
 
-    DATABASE.set(roomID, roomData);
+    socket.join(roomID);
+    socket.emit("loginCallback", true);
   });
 
   socket.on("join", (roomID: string, userID: string, username: string) => {
-    if (!DATABASE.has(roomID)) {
+    if (!DATABASE.hasOwnProperty(roomID)) {
       socket.emit("loginCallback", false, "Room doesn't exist.");
       return;
     }
 
-    const roomData = DATABASE.get(roomID);
+    const roomData = DATABASE[roomID];
+    roomData[userID] = {
+      username: username,
+      ready: false,
+      votes: 0
+    };
 
-    // finish
-
+    socket.join(roomID);
+    socket.emit("loginCallback", true);
   });
 
   socket.onAny((event, ...args) => {

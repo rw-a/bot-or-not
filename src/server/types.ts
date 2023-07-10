@@ -19,9 +19,7 @@ export interface SocketData {
 export interface UserData {
   username: string
   ready: boolean
-  answer: string
   votes: number
-  vote: string
+  answer?: string
+  vote?: string
 }
-
-export type UserDataMap = Map<keyof UserData, string | boolean | number>;
