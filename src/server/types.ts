@@ -1,5 +1,6 @@
 export interface ServerToClientEvents {
-  loginCallback: (success: boolean, errorMessage?: string) => void
+  loginError: (errorMessage: string) => void
+  loginSuccess: (otherUsernames: string[]) => void
 }
   
 export interface ClientToServerEvents {

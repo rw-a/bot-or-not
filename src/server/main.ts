@@ -42,7 +42,7 @@ io.on("connect", (socket) => {
   socket.on("create", (roomID: string, userID: string, username: string) => {
     if (DATABASE.hasOwnProperty(roomID)) {
       // This shouldn't happen since room code is checked on generation
-      socket.emit("loginCallback", false, "Room already exists.");
+      socket.emit("loginError", "Room already exists.");
       return;
     }
 
@@ -55,16 +55,21 @@ io.on("connect", (socket) => {
     };
 
     socket.join(roomID);
-    socket.emit("loginCallback", true);
+    socket.emit("loginSuccess", []);
   });
 
   socket.on("join", (roomID: string, userID: string, username: string) => {
     if (!DATABASE.hasOwnProperty(roomID)) {
-      socket.emit("loginCallback", false, "Room doesn't exist.");
+      socket.emit("loginError", "Room doesn't exist.");
       return;
     }
 
     const roomData = DATABASE[roomID];
+    const otherUsernames = []; 
+    for (const user of Object.values(roomData)) {
+      otherUsernames.push(user.username);
+    }
+
     roomData[userID] = {
       username: username,
       ready: false,
@@ -72,7 +77,7 @@ io.on("connect", (socket) => {
     };
 
     socket.join(roomID);
-    socket.emit("loginCallback", true);
+    socket.emit("loginSuccess", otherUsernames);
   });
 
   socket.onAny((event, ...args) => {
