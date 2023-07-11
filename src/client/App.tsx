@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { socket } from './socket';
 
 import './App.css'
-import { RoomData } from '../server/types';
+import { GameState } from '../server/types';
 import { Button, TextInput } from './components/components';
 
 function generateID (len?: number) {
@@ -87,25 +87,29 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
 
 interface GamePageProps {
   roomID: string
-  gameState: RoomData
+  gameState: GameState
 }
 
 function GamePage({gameState, roomID}: GamePageProps) {
   const usernames = [];
-  for (const user of Object.values(gameState)) {
-    usernames.push(user.username);
+  for (const [index, user] of Object.entries(gameState)) {
+    usernames.push([index, user.username]);
   }
 
   return (
-    <div className="">
-      <div>
-        <p>{roomID}</p>
+    <div className="flex flex-col border-solid border-slate-700 border-2 rounded-md">
+      <div className="flex justify-evenly">
+        <p>Room Code: {roomID}</p>
       </div>
-      <div>
-        <div>
-          {usernames.map((username) => <p key={username}>{username}</p>)}
+      <div className="flex">
+        <div className="basis-1/4 border">
+          {usernames.map(([index, username]) => 
+          <div key={index}>{username}</div>
+          )}
         </div>
-        <div></div>
+        <div className="basis-3/4 border">
+          Main Game
+        </div>
       </div>
     </div>
   );
@@ -117,7 +121,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
 
-  const [gameState, setGameState] = useState({} as RoomData);
+  const [gameState, setGameState] = useState([] as GameState);
 
   useEffect(() => {
     // Attempt login
@@ -143,7 +147,7 @@ function App() {
       setIsAuthenticated(true);
     }
 
-    function syncGameState(newGameState: RoomData) {
+    function syncGameState(newGameState: GameState) {
       setGameState(newGameState);
     }
 

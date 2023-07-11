@@ -3,7 +3,8 @@ import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, RoomData, PUBLIC_USER_DATA, UserData } from "./types";
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
+  RoomData, PUBLIC_USER_DATA, UserData, GameState, PublicUserData } from "./types";
 import { WS_PORT } from "../config";
 
 
@@ -31,13 +32,14 @@ function generateID(len?: number) {
 }
 
 function syncGameState(roomID: string) {
-  const gameState: RoomData = {};
-  for (const [userID, userData] of Object.entries(DATABASE[roomID])) {
-    const publicUserData: Partial<UserData> = {};
+  const gameState: GameState = [];
+  for (const userData of Object.values(DATABASE[roomID])) {
+    const publicUserData = {} as PublicUserData;
     for (const userProperty of PUBLIC_USER_DATA) {
+      // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
       publicUserData[userProperty] = userData[userProperty];
     }
-    gameState[userID] = publicUserData;
+    gameState.push(publicUserData);
   }
   io.to(roomID).emit("syncGameState", gameState);
 }

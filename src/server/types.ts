@@ -1,7 +1,7 @@
 export interface ServerToClientEvents {
   loginError: (errorMessage: string) => void
   loginSuccess: () => void
-  syncGameState: (roomData: RoomData) => void
+  syncGameState: (gameState: GameState) => void
 }
   
 export interface ClientToServerEvents {
@@ -18,6 +18,7 @@ export interface SocketData {
 
 }
 
+// As stored on the server
 export interface UserData {
   username: string
   ready: boolean
@@ -26,8 +27,14 @@ export interface UserData {
   vote?: string
 }
 
-export const PUBLIC_USER_DATA: (keyof UserData)[] = ["username", "ready", "votes"];
+export const PUBLIC_USER_DATA = ["username", "ready", "votes"] as const;
+export type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
+
+export type PublicUserData = Pick<UserData, PublicUserDataProperties>;  // a subset of UserData accessible to the clients
 
 export interface RoomData {
   [key: string]: UserData
 }
+
+// As accessible to the clients. UserID and some properties have been removed
+export type GameState = PublicUserData[];
