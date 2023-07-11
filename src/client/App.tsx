@@ -19,7 +19,9 @@ interface LoginPageProps {
 function LoginPage({onLogin, loginError}: LoginPageProps) {
   const [username, setUsername] = useState("");
   const [roomID, setRoomID] = useState("");
-  const [triedLogin, setTriedLogin] = useState(false);
+
+  // Tracks whether the user has tried to submit the login
+  const [triedLogin, setTriedLogin] = useState(false);  // login = join OR create room
   const [triedJoin, setTriedJoin] = useState(false);
 
   function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
@@ -95,15 +97,15 @@ function GamePage({gameState, roomID}: GamePageProps) {
   }
 
   return (
-    <div>
-      <div id="top-bar">
+    <div className="">
+      <div>
         <p>{roomID}</p>
       </div>
       <div>
-        <div id="side-panel">
+        <div>
           {usernames.map((username) => <p key={username}>{username}</p>)}
         </div>
-        <div id="main-panel"></div>
+        <div></div>
       </div>
     </div>
   );
