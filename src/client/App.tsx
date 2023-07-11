@@ -17,10 +17,9 @@ interface LoginPageProps {
 }
 
 function LoginPage({onLogin, loginError}: LoginPageProps) {
-  /* TODO: add validation */
-
   const [username, setUsername] = useState("");
   const [roomID, setRoomID] = useState("");
+  const [noUsername, setNoUsername] = useState(false);
 
   function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
     setUsername(event.currentTarget.value);
@@ -35,6 +34,11 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
   }
 
   async function handleCreate() {
+    if (!username) {
+      setNoUsername(true);
+      return;
+    }
+
     const roomID: string = await socket.emitWithAck("generateRoomID");
     onLogin(roomID, username, true);
   }
@@ -49,6 +53,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
           value={username} 
           placeholder='Enter your name...'
           onChange={handleUsernameChange}
+          invalid={noUsername}
         ></TextInput>
       </div>
       <div className="flex justify-around items-center">
