@@ -1,14 +1,15 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { socket } from './socket';
+
 import './App.css'
 import { RoomData } from '../server/types';
+import { TextInput } from './components/components';
 
 function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
   window.crypto.getRandomValues(arr)
   return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
 }
-
 
 interface LoginPageProps {
   onLogin: (roomCode: string, newUsername: string, create: boolean) => void
@@ -38,16 +39,24 @@ function LoginPage({onLogin}: LoginPageProps) {
   }
 
   return (
-    <div className="mx-auto">
+    <div>
       <h1>Title</h1>
       <div>
         <p>Username</p>
-        <input type="text" value={username} onChange={handleUsernameChange}></input>
+        <TextInput 
+          required 
+          value={username} 
+          placeholder='Enter your name...'
+          onChange={handleUsernameChange}
+        ></TextInput>
       </div>
       <div>
         <div>
           <label>Room Code</label>
-          <input type="text" value={roomID} onChange={handleRoomIDChange}></input>
+          <TextInput 
+            value={roomID} 
+            onChange={handleRoomIDChange}
+          ></TextInput>
           <br></br>
           <button onClick={handleLogin}>Join Room</button>
         </div>
