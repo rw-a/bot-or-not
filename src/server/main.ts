@@ -19,9 +19,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 });
 io.listen(WS_PORT);
 
-const DATABASE: {
-  [key:string]: RoomData
-} = {};
+const DATABASE: {[key:string]: RoomData} = {};
 
 
 function syncGameState(roomID: string) {
@@ -50,7 +48,7 @@ io.on("connect", (socket) => {
     callback(roomID);
   });
 
-  socket.on("create", (roomID: string, userID: string, username: string) => {
+  socket.on("createRoom", (roomID: string, userID: string, username: string) => {
     if (DATABASE.hasOwnProperty(roomID)) {
       // This shouldn't happen since room code is checked on generation
       socket.emit("loginError", "Room already exists.");
@@ -64,7 +62,7 @@ io.on("connect", (socket) => {
     syncGameState(roomID);
   });
 
-  socket.on("join", (roomID: string, userID: string, username: string) => {
+  socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
     if (!DATABASE.hasOwnProperty(roomID)) {
       socket.emit("loginError", "Room doesn't exist.");
       return;
@@ -76,6 +74,13 @@ io.on("connect", (socket) => {
     socket.join(roomID);
     socket.emit("loginSuccess");
     syncGameState(roomID);
+  });
+
+  socket.on("toggleReady", (roomID: string, userID: string) => {
+    if (DATABASE.hasOwnProperty(roomID) && DATABASE[roomID].hasOwnProperty(userID)) {
+      DATABASE[roomID][userID].ready = !DATABASE[roomID][userID].ready;
+      syncGameState(roomID);
+    }
   });
 
   socket.onAny((event, ...args) => {

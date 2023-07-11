@@ -16,6 +16,9 @@ module.exports = {
           DEFAULT: "#3b82f6",   // blue-500
           dark:    "#1d4ed8",   // blue-700
         },
+        success: {
+          DEFAULT: "#22c55e"    // green-500
+        },
         danger: {
           DEFAULT: "#f43f5e",   // rose-500
           dark:    "#be123c",   // rose-700

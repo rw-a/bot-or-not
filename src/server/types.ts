@@ -6,8 +6,9 @@ export interface ServerToClientEvents {
   
 export interface ClientToServerEvents {
   generateRoomID: (callback: (roomID: string) => void) => void
-  create: (roomID: string, userID: string, username: string) => void
-  join: (roomID: string, userID: string, username: string) => void
+  createRoom: (roomID: string, userID: string, username: string) => void
+  joinRoom: (roomID: string, userID: string, username: string) => void
+  toggleReady: (roomID: string, userID: string) => void
 }
 
 export interface InterServerEvents {
@@ -22,12 +23,13 @@ export interface SocketData {
 export interface UserData {
   username: string
   ready: boolean
+  points: number
   votes: number
   answer?: string
   vote?: string
 }
 
-export const PUBLIC_USER_DATA = ["username", "ready", "votes"] as const;
+export const PUBLIC_USER_DATA = ["username", "ready", "points", "votes"] as const;
 export type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
 
 export type PublicUserData = Pick<UserData, PublicUserDataProperties>;  // a subset of UserData accessible to the clients

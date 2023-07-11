@@ -88,23 +88,23 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
 interface GamePageProps {
   roomID: string
   gameState: GameState
+  onReady: () => void
 }
 
-function GamePage({gameState, roomID}: GamePageProps) {
-  const usernames = [];
-  for (const [index, user] of Object.entries(gameState)) {
-    usernames.push([index, user.username]);
-  }
-
+function GamePage({gameState, roomID, onReady}: GamePageProps) {
   return (
-    <div className="flex flex-col border-solid border-slate-700 border-2 rounded-md">
+    <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <div className="flex justify-evenly">
+        <Button onClick={onReady}>Ready</Button>
         <p>Room Code: {roomID}</p>
       </div>
       <div className="flex">
-        <div className="basis-1/4 border">
-          {usernames.map(([index, username]) => 
-          <div key={index}>{username}</div>
+        <div className="basis-1/4">
+          {Object.entries(gameState).map(([index, user]) => 
+          <div key={index} className={`border-[1px] border-${user.ready ? "success" : "danger"}`}>
+            <p>{user.username}</p>
+            <p>Points: {user.points}</p>
+          </div>
           )}
         </div>
         <div className="basis-3/4 border">
@@ -116,7 +116,7 @@ function GamePage({gameState, roomID}: GamePageProps) {
 }
 
 function App() {
-  const userID = useRef("");
+  const userID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
   const [roomID, setRoomID] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -124,7 +124,7 @@ function App() {
   const [gameState, setGameState] = useState([] as GameState);
 
   useEffect(() => {
-    // Attempt login
+    /* Note: currently does nothing */
     const storedSessionID = localStorage.getItem("sessionID");
     if (storedSessionID) {
       setIsAuthenticated(true);
@@ -179,17 +179,21 @@ function App() {
     setRoomID(newRoomID);
 
     if (create) {
-      socket.emit("create", newRoomID, userID.current, newUsername);
+      socket.emit("createRoom", newRoomID, userID.current, newUsername);
     } else {
-      socket.emit("join", newRoomID, userID.current, newUsername);
+      socket.emit("joinRoom", newRoomID, userID.current, newUsername);
     }
+  }
+
+  function onReady() {
+    socket.emit("toggleReady", roomID, userID.current);
   }
 
   return (
     <div className="container mx-auto px-4">
       {(!isAuthenticated) ? 
       <LoginPage onLogin={onLogin} loginError={loginError}></LoginPage> : 
-      <GamePage gameState={gameState} roomID={roomID}></GamePage>
+      <GamePage gameState={gameState} roomID={roomID} onReady={onReady}></GamePage>
       }
     </div>
   )
