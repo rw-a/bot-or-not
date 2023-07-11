@@ -30,6 +30,11 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
   }
 
   function handleLogin() {
+    if (!username) {
+      setNoUsername(true);
+      return;
+    }
+
     onLogin(roomID, username, false);
   }
 
@@ -53,7 +58,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
           value={username} 
           placeholder='Enter your name...'
           onChange={handleUsernameChange}
-          invalid={noUsername}
+          verify={noUsername}
         ></TextInput>
       </div>
       <div className="flex justify-around items-center">
@@ -62,7 +67,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
           <TextInput 
             value={roomID} 
             onChange={handleRoomIDChange}
-            invalid={Boolean(loginError)}
+            verify={Boolean(loginError) || noUsername}
             errorText={loginError}
           ></TextInput>
           <Button onClick={handleLogin}>Join Room</Button>
