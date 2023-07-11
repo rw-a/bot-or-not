@@ -20,6 +20,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
   const [username, setUsername] = useState("");
   const [roomID, setRoomID] = useState("");
   const [triedLogin, setTriedLogin] = useState(false);
+  const [triedJoin, setTriedJoin] = useState(false);
 
   function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
     setUsername(event.currentTarget.value);
@@ -32,6 +33,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
   function handleJoin() {
     if (!username) {
       setTriedLogin(true);
+      setTriedJoin(true);
       return;
     }
 
@@ -68,7 +70,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
             required
             value={roomID} 
             onChange={handleRoomIDChange}
-            verify={Boolean(loginError) || triedLogin}
+            verify={Boolean(loginError) || triedJoin}
             errorText={loginError}
           ></TextInput>
           <Button onClick={handleJoin}>Join Room</Button>
