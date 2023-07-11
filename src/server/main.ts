@@ -3,13 +3,17 @@ import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, UserData } from "./types";
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, RoomData } from "./types";
 import { WS_PORT } from "../config";
 
 function generateID(len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
   crypto.getRandomValues(arr)
   return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
+}
+
+function syncGameState(roomID: string) {
+  io.to(roomID).emit("syncGameState", DATABASE[roomID]);
 }
 
 dotenv.config();
@@ -23,15 +27,13 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 io.listen(WS_PORT);
 
 const DATABASE: {
-  [key:string]: {
-    [key:string]: UserData
-  }
+  [key:string]: RoomData
 } = {};
 
 io.on("connect", (socket) => {
   socket.on("generateRoomID", (callback: (roomID: string) => void) => {
     // Generate roomID until an unonccupied one is found
-    let roomID;
+    let roomID: string;
     do {
       roomID = generateID(6).toUpperCase();
     } while (DATABASE.hasOwnProperty(roomID));
@@ -55,7 +57,8 @@ io.on("connect", (socket) => {
     };
 
     socket.join(roomID);
-    socket.emit("loginSuccess", []);
+    socket.emit("loginSuccess");
+    syncGameState(roomID);
   });
 
   socket.on("join", (roomID: string, userID: string, username: string) => {
@@ -77,8 +80,8 @@ io.on("connect", (socket) => {
     };
 
     socket.join(roomID);
-    socket.emit("loginSuccess", otherUsernames);
-    socket.broadcast.to(roomID).emit("userJoined", username);
+    socket.emit("loginSuccess");
+    syncGameState(roomID);
   });
 
   socket.onAny((event, ...args) => {

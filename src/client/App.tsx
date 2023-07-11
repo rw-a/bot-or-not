@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { socket } from './socket';
 import './App.css'
+import { RoomData } from '../server/types';
 
 function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
@@ -58,11 +59,16 @@ function LoginPage({onLogin}: LoginPageProps) {
 }
 
 interface GamePageProps {
-  usernames: string[]
   roomID: string
+  gameState: RoomData
 }
 
-function GamePage({usernames, roomID}: GamePageProps) {
+function GamePage({gameState, roomID}: GamePageProps) {
+  const usernames = [];
+  for (const user of Object.values(gameState)) {
+    usernames.push(user.username);
+  }
+
   return (
     <div>
       <div id="top-bar">
@@ -81,10 +87,9 @@ function GamePage({usernames, roomID}: GamePageProps) {
 function App() {
   const userID = useRef("");
   const [roomID, setRoomID] = useState("");
-  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [usernames, setUsernames] = useState([] as string[]);
 
+  const [gameState, setGameState] = useState({} as RoomData);
 
   useEffect(() => {
     // Attempt login
@@ -106,13 +111,12 @@ function App() {
       console.log(errorMessage);
     }
 
-    function loginSuccess(otherUsernames: string[]) {
-      setUsernames((previous) => [...previous, ...otherUsernames]);
+    function loginSuccess() {
       setIsAuthenticated(true);
     }
 
-    function userJoined(newUsername: string) {
-      setUsernames((previous) => [...previous, newUsername]);
+    function syncGameState(newGameState: RoomData) {
+      setGameState(newGameState);
     }
 
     function onDisconnect() {
@@ -121,7 +125,7 @@ function App() {
 
     socket.on('loginError', loginError);
     socket.on('loginSuccess', loginSuccess);
-    socket.on('userJoined', userJoined);
+    socket.on('syncGameState', syncGameState);
     socket.on('connect_error', onConnectError);
     socket.on('disconnect', onDisconnect);
 
@@ -132,7 +136,7 @@ function App() {
     return () => {
       socket.off('loginError', loginError);
       socket.off('loginSuccess', loginSuccess);
-      socket.off('userJoined', userJoined);
+      socket.off('syncGameState', syncGameState);
       socket.off('connect_error', onConnectError);
       socket.off('disconnect', onDisconnect);
     };
@@ -141,7 +145,6 @@ function App() {
   function onLogin(newRoomID: string, newUsername: string, create: boolean) {
     userID.current = generateID();
     setRoomID(newRoomID);
-    setUsernames([newUsername]);
 
     if (create) {
       socket.emit("create", newRoomID, userID.current, newUsername);
@@ -154,7 +157,7 @@ function App() {
     <>
       {(!isAuthenticated) ? 
       <LoginPage onLogin={onLogin}></LoginPage> : 
-      <GamePage usernames={usernames} roomID={roomID}></GamePage>
+      <GamePage gameState={gameState} roomID={roomID}></GamePage>
       }
     </>
   )

@@ -1,7 +1,7 @@
 export interface ServerToClientEvents {
   loginError: (errorMessage: string) => void
-  loginSuccess: (otherUsernames: string[]) => void
-  userJoined: (username: string) => void
+  loginSuccess: () => void
+  syncGameState: (roomData: RoomData) => void
 }
   
 export interface ClientToServerEvents {
@@ -24,4 +24,8 @@ export interface UserData {
   votes: number
   answer?: string
   vote?: string
+}
+
+export interface RoomData {
+  [key: string]: UserData
 }
