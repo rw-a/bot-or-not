@@ -1,11 +1,11 @@
-import crypto from "crypto";
 import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
-  RoomData, PUBLIC_USER_DATA, UserData, GameState, PublicUserData } from "./types";
+  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData } from "./types";
 import { WS_PORT } from "../config";
+import { generateID, createUser } from "./utility";
 
 
 /* Setup Server */
@@ -23,13 +23,6 @@ const DATABASE: {
   [key:string]: RoomData
 } = {};
 
-
-/* Helper Functions */
-function generateID(len?: number) {
-  var arr = new Uint8Array((len || 40) / 2)
-  crypto.getRandomValues(arr)
-  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
-}
 
 function syncGameState(roomID: string) {
   const gameState: GameState = [];
@@ -64,13 +57,7 @@ io.on("connect", (socket) => {
       return;
     }
 
-    DATABASE[roomID] = {
-      [userID]: {
-        username: username,
-        ready: false,
-        votes: 0
-      }
-    };
+    DATABASE[roomID] = {[userID]: createUser(username)};
 
     socket.join(roomID);
     socket.emit("loginSuccess");
@@ -84,16 +71,7 @@ io.on("connect", (socket) => {
     }
 
     const roomData = DATABASE[roomID];
-    const otherUsernames = []; 
-    for (const user of Object.values(roomData)) {
-      otherUsernames.push(user.username);
-    }
-
-    roomData[userID] = {
-      username: username,
-      ready: false,
-      votes: 0
-    };
+    roomData[userID] = createUser(username);
 
     socket.join(roomID);
     socket.emit("loginSuccess");
