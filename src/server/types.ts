@@ -26,6 +26,8 @@ export interface UserData {
   vote?: string
 }
 
+export const PUBLIC_USER_DATA: (keyof UserData)[] = ["username", "ready", "votes"];
+
 export interface RoomData {
   [key: string]: UserData
 }

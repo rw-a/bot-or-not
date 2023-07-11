@@ -126,6 +126,7 @@ function App() {
     } 
 
     function onConnectError(err: Error) {
+      /* Auto-connect is enabled. Maybe make an alert */
       console.log(err);
     }
 

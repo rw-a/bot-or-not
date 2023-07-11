@@ -3,19 +3,11 @@ import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, RoomData } from "./types";
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, RoomData, PUBLIC_USER_DATA, UserData } from "./types";
 import { WS_PORT } from "../config";
 
-function generateID(len?: number) {
-  var arr = new Uint8Array((len || 40) / 2)
-  crypto.getRandomValues(arr)
-  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
-}
 
-function syncGameState(roomID: string) {
-  io.to(roomID).emit("syncGameState", DATABASE[roomID]);
-}
-
+/* Setup Server */
 dotenv.config();
 
 const app = express();
@@ -30,6 +22,28 @@ const DATABASE: {
   [key:string]: RoomData
 } = {};
 
+
+/* Helper Functions */
+function generateID(len?: number) {
+  var arr = new Uint8Array((len || 40) / 2)
+  crypto.getRandomValues(arr)
+  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
+}
+
+function syncGameState(roomID: string) {
+  const gameState: RoomData = {};
+  for (const [userID, userData] of Object.entries(DATABASE[roomID])) {
+    const publicUserData: Partial<UserData> = {};
+    for (const userProperty of PUBLIC_USER_DATA) {
+      publicUserData[userProperty] = userData[userProperty];
+    }
+    gameState[userID] = publicUserData;
+  }
+  io.to(roomID).emit("syncGameState", gameState);
+}
+
+
+/* Socket Handling */
 io.on("connect", (socket) => {
   socket.on("generateRoomID", (callback: (roomID: string) => void) => {
     // Generate roomID until an unonccupied one is found
@@ -49,7 +63,7 @@ io.on("connect", (socket) => {
     }
 
     DATABASE[roomID] = {
-      userID: {
+      [userID]: {
         username: username,
         ready: false,
         votes: 0
