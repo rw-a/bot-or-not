@@ -3,7 +3,7 @@ import { socket } from './socket';
 
 import './App.css'
 import { RoomData } from '../server/types';
-import { TextInput } from './components/components';
+import { Button, TextInput } from './components/components';
 
 function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
@@ -58,10 +58,10 @@ function LoginPage({onLogin}: LoginPageProps) {
             onChange={handleRoomIDChange}
           ></TextInput>
           <br></br>
-          <button onClick={handleLogin}>Join Room</button>
+          <Button onClick={handleLogin}>Join Room</Button>
         </div>
         <div>
-          <button onClick={handleCreate}>Create Room</button>
+          <Button onClick={handleCreate}>Create Room</Button>
         </div>
       </div>
     </div>

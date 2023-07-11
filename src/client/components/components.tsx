@@ -1,4 +1,5 @@
-import { useState, ChangeEventHandler } from 'react';
+import { useState, ChangeEventHandler, MouseEventHandler } from 'react';
+
 
 interface TextInputProps {
   value: string
@@ -7,7 +8,6 @@ interface TextInputProps {
   onChange: ChangeEventHandler<HTMLInputElement>
   className?: string
 }
-
 
 export function TextInput({value, placeholder, required, onChange, className}: TextInputProps) {
   const [hasTouched, setHasTouched] = useState(false);
@@ -22,10 +22,31 @@ export function TextInput({value, placeholder, required, onChange, className}: T
       required={required} 
       onChange={(event) => {onChange(event), setHasTouched(true)}} 
       onClick={() => setHasTouched(true)} 
-      className={`mt-1 block w-full px-3 py-2 rounded-md text-sm shadow-sm 
-      bg-white border border-slate-300 placeholder-slate-400 
-      focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 
-      ` + invalidStates + className}
+      className={invalidStates + (className ?? "") + `
+        mt-1 block w-full px-3 py-2 rounded-md text-sm shadow-sm 
+        bg-white border border-slate-300 placeholder-slate-400 
+        focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500
+      `}
     ></input>
+  );
+}
+
+
+interface ButtonProps {
+  children: string
+  onClick: MouseEventHandler<HTMLButtonElement>
+  className?: string
+}
+
+export function Button({children, onClick, className}: ButtonProps) {
+  return (
+    <button
+      title={children}
+      onClick={onClick}
+      className={(className ?? "") + `
+        px-5 py-2.5 text-sm leading-5 rounded-md font-semibold
+        text-white bg-sky-500 hover:bg-sky-700  
+      `}
+    >{children}</button>
   );
 }
