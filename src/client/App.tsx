@@ -38,12 +38,13 @@ function LoginPage({onLogin}: LoginPageProps) {
   }
 
   return (
-    <div>
+    <div className="mx-auto">
+      <h1>Title</h1>
       <div>
         <p>Username</p>
         <input type="text" value={username} onChange={handleUsernameChange}></input>
       </div>
-      <div id="join-type-selector">
+      <div>
         <div>
           <label>Room Code</label>
           <input type="text" value={roomID} onChange={handleRoomIDChange}></input>
@@ -154,12 +155,12 @@ function App() {
   }
 
   return (
-    <>
+    <div className="container mx-auto px-4">
       {(!isAuthenticated) ? 
       <LoginPage onLogin={onLogin}></LoginPage> : 
       <GamePage gameState={gameState} roomID={roomID}></GamePage>
       }
-    </>
+    </div>
   )
 }
 
