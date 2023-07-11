@@ -13,9 +13,10 @@ function generateID (len?: number) {
 
 interface LoginPageProps {
   onLogin: (roomCode: string, newUsername: string, create: boolean) => void
+  loginError: string
 }
 
-function LoginPage({onLogin}: LoginPageProps) {
+function LoginPage({onLogin, loginError}: LoginPageProps) {
   /* TODO: add validation */
 
   const [username, setUsername] = useState("");
@@ -40,9 +41,9 @@ function LoginPage({onLogin}: LoginPageProps) {
 
   return (
     <div>
-      <h1>Title</h1>
+      <h1 className="text-2xl font-bold">Title</h1>
       <div>
-        <p>Username</p>
+        <p className="text-lg font-medium">Username</p>
         <TextInput 
           required 
           value={username} 
@@ -50,14 +51,15 @@ function LoginPage({onLogin}: LoginPageProps) {
           onChange={handleUsernameChange}
         ></TextInput>
       </div>
-      <div>
+      <div className="flex justify-around items-center">
         <div>
-          <label>Room Code</label>
+          <p className="text-lg font-medium">Room Code</p>
           <TextInput 
             value={roomID} 
             onChange={handleRoomIDChange}
+            invalid={Boolean(loginError)}
+            errorText={loginError}
           ></TextInput>
-          <br></br>
           <Button onClick={handleLogin}>Join Room</Button>
         </div>
         <div>
@@ -98,6 +100,7 @@ function App() {
   const userID = useRef("");
   const [roomID, setRoomID] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const [gameState, setGameState] = useState({} as RoomData);
 
@@ -117,8 +120,7 @@ function App() {
     }
 
     function loginError(errorMessage: string) {
-      /* TODO: Make element */
-      console.log(errorMessage);
+      setLoginError(errorMessage);
     }
 
     function loginSuccess() {
@@ -166,7 +168,7 @@ function App() {
   return (
     <div className="container mx-auto px-4">
       {(!isAuthenticated) ? 
-      <LoginPage onLogin={onLogin}></LoginPage> : 
+      <LoginPage onLogin={onLogin} loginError={loginError}></LoginPage> : 
       <GamePage gameState={gameState} roomID={roomID}></GamePage>
       }
     </div>
