@@ -19,7 +19,7 @@ interface LoginPageProps {
 function LoginPage({onLogin, loginError}: LoginPageProps) {
   const [username, setUsername] = useState("");
   const [roomID, setRoomID] = useState("");
-  const [noUsername, setNoUsername] = useState(false);
+  const [triedLogin, setTriedLogin] = useState(false);
 
   function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
     setUsername(event.currentTarget.value);
@@ -29,9 +29,9 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
     setRoomID(event.currentTarget.value);
   }
 
-  function handleLogin() {
+  function handleJoin() {
     if (!username) {
-      setNoUsername(true);
+      setTriedLogin(true);
       return;
     }
 
@@ -40,7 +40,7 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
 
   async function handleCreate() {
     if (!username) {
-      setNoUsername(true);
+      setTriedLogin(true);
       return;
     }
 
@@ -58,19 +58,20 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
           value={username} 
           placeholder='Enter your name...'
           onChange={handleUsernameChange}
-          verify={noUsername}
+          verify={triedLogin}
         ></TextInput>
       </div>
       <div className="flex justify-around items-center">
         <div>
           <p className="text-lg font-medium">Room Code</p>
           <TextInput 
+            required
             value={roomID} 
             onChange={handleRoomIDChange}
-            verify={Boolean(loginError) || noUsername}
+            verify={Boolean(loginError) || triedLogin}
             errorText={loginError}
           ></TextInput>
-          <Button onClick={handleLogin}>Join Room</Button>
+          <Button onClick={handleJoin}>Join Room</Button>
         </div>
         <div>
           <Button onClick={handleCreate}>Create Room</Button>
