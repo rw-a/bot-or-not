@@ -1,7 +1,13 @@
 export interface ServerToClientEvents {
+  // Built-in events
+  disconnect: () => void
+  connect_error: (error: Error) => void
+
+  // Custom events
   loginError: (errorMessage: string) => void
   loginSuccess: () => void
   syncGameState: (gameState: GameState) => void
+  gameStart: (time: Date) => void
 }
   
 export interface ClientToServerEvents {

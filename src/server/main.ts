@@ -35,6 +35,15 @@ function syncGameState(roomID: string) {
   io.to(roomID).emit("syncGameState", gameState);
 }
 
+function allPlayersReady(roomID: string) {
+  for (const user of Object.values(DATABASE[roomID])) {
+    if (!user.ready) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 /* Socket Handling */
 io.on("connect", (socket) => {
@@ -80,6 +89,11 @@ io.on("connect", (socket) => {
     if (DATABASE.hasOwnProperty(roomID) && DATABASE[roomID].hasOwnProperty(userID)) {
       DATABASE[roomID][userID].ready = !DATABASE[roomID][userID].ready;
       syncGameState(roomID);
+
+      // If all players are now ready, start game
+      if (DATABASE[roomID][userID].ready && allPlayersReady(roomID)) {
+        io.to(roomID).emit("gameStart", new Date());
+      }
     }
   });
 
