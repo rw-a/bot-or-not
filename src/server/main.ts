@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
-  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData } from "./types";
+  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases } from "./types";
 import { WS_PORT } from "../config";
 import { generateID, createUser } from "./utility";
 
@@ -40,6 +40,7 @@ function syncGameState(roomID: string) {
       gameState.users = users;
 
     } else {
+      // @ts-ignore
       gameState[key as keyof RoomData] = value;
     }
   }
@@ -76,7 +77,7 @@ io.on("connect", (socket) => {
       return;
     } else {
       // Create room with initial game state
-      DATABASE[roomID] = {hasStarted: false, gameStartTime: new Date(), users: {}};
+      DATABASE[roomID] = {gamePhase: GamePhases.Lobby, timerStartTime: new Date(), users: {}};
     }
 
     DATABASE[roomID].users = {[userID]: createUser(username)};
@@ -105,8 +106,8 @@ io.on("connect", (socket) => {
       
       // If all players are now ready, start game
       if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
-        DATABASE[roomID].hasStarted = true;
-        DATABASE[roomID].gameStartTime = new Date();
+        DATABASE[roomID].gamePhase = GamePhases.Writing;
+        DATABASE[roomID].timerStartTime = new Date();
       }
       
       syncGameState(roomID);

@@ -14,6 +14,8 @@ export interface ClientToServerEvents {
   createRoom: (roomID: string, userID: string, username: string) => void
   joinRoom: (roomID: string, userID: string, username: string) => void
   toggleReady: (roomID: string, userID: string) => void
+  submitAnswer: (answer: string) => void
+  submitVote: (userIndex: number) => void
 }
 
 export interface InterServerEvents {
@@ -25,9 +27,16 @@ export interface SocketData {
 }
 
 /* Stored Server-side */
+export enum GamePhases {
+  Lobby,
+  Writing,
+  Voting,
+}
+
 export interface RoomData {
-  hasStarted: boolean
-  gameStartTime: Date   // WARNING: this gets converted into string form when sent over socket.io
+  gamePhase: GamePhases
+  timerStartTime: Date   // WARNING: this gets converted into string form when sent over socket.io
+  prompt?: string
   users: {
     [key: string]: UserData
   }

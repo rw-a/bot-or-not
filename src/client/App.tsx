@@ -3,10 +3,9 @@ import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
 import './App.css'
-import { ServerToClientEvents, GameState } from '../server/types';
+import { ServerToClientEvents, GameState, GamePhases } from '../server/types';
+import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
 import { Button, TextInput } from './components/components';
-
-const GAME_DURATION = 60; // in seconds
 
 function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
@@ -106,20 +105,38 @@ function GamePage({gameState, roomID, onReady}: GamePageProps) {
     resume,
     restart,
   } = useTimer({ 
-    expiryTimestamp: new Date(new Date(gameState.gameStartTime).getTime() + GAME_DURATION * 1000), 
-    onExpire: () => console.warn('onExpire called'),
+    expiryTimestamp: new Date(new Date(gameState.timerStartTime).getTime() + WRITING_PHASE_DURATION * 1000), 
+    onExpire: onTimerDone,
     autoStart: false
   });
 
-  // Start timer once games starts
-  if (gameState.hasStarted && !isRunning) {
+  const [answer, setAnswer] = useState("");
+  const [vote, setVote] = useState(-1);   // the index of the user which the player votes for (note for future: index may be unreliable)
+
+  // Start timer once appropriate phase starts
+  if (gameState.gamePhase === GamePhases.Writing && !isRunning) {
     start();
+  }
+  if (gameState.gamePhase === GamePhases.Voting && !isRunning) {
+    restart(new Date(new Date(gameState.timerStartTime).getTime() + VOTING_PHASE_DURATION * 1000));
+  }
+
+  function onTimerDone() {
+    pause();
+
+    if (gameState.gamePhase === GamePhases.Writing) {
+      socket.emit("submitAnswer", answer);
+    } else if (gameState.gamePhase === GamePhases.Voting) {
+      socket.emit("submitVote", vote);
+    } else {
+      console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
+    }
   }
 
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <div className="flex justify-evenly">
-        {!gameState.hasStarted ? <>
+        {gameState.gamePhase === GamePhases.Lobby ? <>
           <Button onClick={onReady}>Ready</Button>
           <p>Room Code: {roomID}</p>
         </> : <>
@@ -222,6 +239,10 @@ function App() {
 
   function onReady() {
     socket.emit("toggleReady", roomID, userID.current);
+  }
+
+  function moveToVoting() {
+
   }
 
   return (
