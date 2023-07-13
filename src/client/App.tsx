@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { socket } from './socket';
 
 import './App.css'
-import { GameState } from '../server/types';
+import { ServerToClientEvents, GameState } from '../server/types';
 import { Button, TextInput } from './components/components';
 
 function generateID (len?: number) {
@@ -124,7 +124,9 @@ function App() {
   const [gameState, setGameState] = useState([] as GameState);
 
   useEffect(() => {
-    /* Note: currently does nothing */
+    /* 
+    TODO: Way to restore session if you close tab
+    Note: currently does nothing
     const storedSessionID = localStorage.getItem("sessionID");
     if (storedSessionID) {
       setIsAuthenticated(true);
@@ -133,44 +135,54 @@ function App() {
       };
       socket.connect();
     } 
+    */
 
-    function onConnectError(err: Error) {
+    function onConnectError(error: Error) {
       /* Auto-connect is enabled. Maybe make an alert */
-      console.log(err);
-    }
-
-    function loginError(errorMessage: string) {
-      setLoginError(errorMessage);
-    }
-
-    function loginSuccess() {
-      setIsAuthenticated(true);
-    }
-
-    function syncGameState(newGameState: GameState) {
-      setGameState(newGameState);
+      console.log(error);
     }
 
     function onDisconnect() {
       setIsAuthenticated(false);
     }
 
-    socket.on('loginError', loginError);
-    socket.on('loginSuccess', loginSuccess);
-    socket.on('syncGameState', syncGameState);
-    socket.on('connect_error', onConnectError);
-    socket.on('disconnect', onDisconnect);
+    function onLoginError(errorMessage: string) {
+      setLoginError(errorMessage);
+    }
+
+    function onLoginSuccess() {
+      setIsAuthenticated(true);
+    }
+
+    function onSyncGameState(newGameState: GameState) {
+      setGameState(newGameState);
+    }
+
+    function onGameStart(time: Date) {
+
+    }
+    
+    const EVENT_LISTENERS: ServerToClientEvents = {
+      connect_error: onConnectError,
+      disconnect: onDisconnect,
+      loginError: onLoginError,
+      loginSuccess: onLoginSuccess,
+      syncGameState: onSyncGameState,
+      gameStart: onGameStart
+    };
+
+    for (const [eventName, eventHandler] of Object.entries(EVENT_LISTENERS)) {
+      socket.on(eventName, eventHandler);
+    }
 
     socket.onAny((event, ...args) => {
       console.log(event, args);
     });
 
     return () => {
-      socket.off('loginError', loginError);
-      socket.off('loginSuccess', loginSuccess);
-      socket.off('syncGameState', syncGameState);
-      socket.off('connect_error', onConnectError);
-      socket.off('disconnect', onDisconnect);
+      for (const [eventName, eventHandler] of Object.entries(EVENT_LISTENERS)) {
+        socket.off(eventName, eventHandler);
+      }
     };
   }, []);
 
