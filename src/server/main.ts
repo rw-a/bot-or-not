@@ -75,6 +75,7 @@ io.on("connect", (socket) => {
       socket.emit("loginError", "Room already exists.");
       return;
     } else {
+      // Create room with initial game state
       DATABASE[roomID] = {hasStarted: false, gameStartTime: new Date(), users: {}};
     }
 

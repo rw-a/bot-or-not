@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
 import './App.css'
 import { ServerToClientEvents, GameState } from '../server/types';
 import { Button, TextInput } from './components/components';
+
+const GAME_DURATION = 60; // in seconds
 
 function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
@@ -92,13 +95,36 @@ interface GamePageProps {
 }
 
 function GamePage({gameState, roomID, onReady}: GamePageProps) {
+  const {
+    seconds,
+    minutes,
+    hours,
+    days,
+    isRunning,
+    start,
+    pause,
+    resume,
+    restart,
+  } = useTimer({ 
+    expiryTimestamp: new Date(new Date(gameState.gameStartTime).getTime() + GAME_DURATION * 1000), 
+    onExpire: () => console.warn('onExpire called'),
+    autoStart: false
+  });
+
+  // Start timer once games starts
+  if (gameState.hasStarted && !isRunning) {
+    start();
+  }
+
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <div className="flex justify-evenly">
         {!gameState.hasStarted ? <>
-        <Button onClick={onReady}>Ready</Button>
-        <p>Room Code: {roomID}</p>
-        </> : "Game Started"}
+          <Button onClick={onReady}>Ready</Button>
+          <p>Room Code: {roomID}</p>
+        </> : <>
+          <p>Time Remaining: {minutes * 60 + seconds}</p>
+        </>}
       </div>
       <div className="flex">
         <div className="basis-1/4">
@@ -157,7 +183,6 @@ function App() {
     }
 
     function onSyncGameState(newGameState: GameState) {
-      console.log(gameState, newGameState);
       setGameState(newGameState);
     }
     

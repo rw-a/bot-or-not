@@ -27,7 +27,7 @@ export interface SocketData {
 /* Stored Server-side */
 export interface RoomData {
   hasStarted: boolean
-  gameStartTime: Date
+  gameStartTime: Date   // WARNING: this gets converted into string form when sent over socket.io
   users: {
     [key: string]: UserData
   }
