@@ -100,7 +100,7 @@ function GamePage({gameState, roomID, onReady}: GamePageProps) {
       </div>
       <div className="flex">
         <div className="basis-1/4">
-          {Object.entries(gameState).map(([index, user]) => 
+          {Object.entries(gameState.users).map(([index, user]) => 
           <div key={index} className={`border-[1px] border-${user.ready ? "success" : "danger"}`}>
             <p>{user.username}</p>
             <p>Points: {user.points}</p>
@@ -121,7 +121,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
 
-  const [gameState, setGameState] = useState([] as GameState);
+  const [gameState, setGameState] = useState({} as GameState);
 
   useEffect(() => {
     /* 
@@ -155,6 +155,7 @@ function App() {
     }
 
     function onSyncGameState(newGameState: GameState) {
+      console.log(gameState, newGameState);
       setGameState(newGameState);
     }
 

@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
-  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData } from "./types";
+  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData } from "./types";
 import { WS_PORT } from "../config";
 import { generateID, createUser } from "./utility";
 
@@ -23,20 +23,32 @@ const DATABASE: {[key:string]: RoomData} = {};
 
 
 function syncGameState(roomID: string) {
-  const gameState: GameState = [];
-  for (const userData of Object.values(DATABASE[roomID])) {
-    const publicUserData = {} as PublicUserData;
-    for (const userProperty of PUBLIC_USER_DATA) {
-      // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
-      publicUserData[userProperty] = userData[userProperty];
+  const gameState = {} as GameState;
+  for (const [key, value] of Object.entries(DATABASE[roomID])) {
+    if (key == "users") {
+      const users: PublicUserData[] = [];
+
+      for (const userData of Object.values(value as {[key: string]: UserData})) {
+        const publicUserData = {} as PublicUserData;
+        for (const userProperty of PUBLIC_USER_DATA) {
+          // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
+          publicUserData[userProperty] = userData[userProperty];
+        }
+        users.push(publicUserData);
+      }
+      
+      gameState.users = users;
+
+    } else {
+      gameState[key as keyof RoomData] = value;
     }
-    gameState.push(publicUserData);
   }
+
   io.to(roomID).emit("syncGameState", gameState);
 }
 
 function allPlayersReady(roomID: string) {
-  for (const user of Object.values(DATABASE[roomID])) {
+  for (const user of Object.values(DATABASE[roomID].users)) {
     if (!user.ready) {
       return false;
     }
@@ -62,13 +74,15 @@ io.on("connect", (socket) => {
       // This shouldn't happen since room code is checked on generation
       socket.emit("loginError", "Room already exists.");
       return;
+    } else {
+      DATABASE[roomID] = {hasStarted: false, users: {}};
     }
 
-    DATABASE[roomID] = {[userID]: createUser(username)};
+    DATABASE[roomID].users = {[userID]: createUser(username)};
 
     socket.join(roomID);
-    socket.emit("loginSuccess");
     syncGameState(roomID);
+    socket.emit("loginSuccess");
   });
 
   socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
@@ -77,23 +91,23 @@ io.on("connect", (socket) => {
       return;
     }
 
-    const roomData = DATABASE[roomID];
-    roomData[userID] = createUser(username);
+    DATABASE[roomID].users[userID] = createUser(username);
 
     socket.join(roomID);
-    socket.emit("loginSuccess");
     syncGameState(roomID);
+    socket.emit("loginSuccess");
   });
 
   socket.on("toggleReady", (roomID: string, userID: string) => {
-    if (DATABASE.hasOwnProperty(roomID) && DATABASE[roomID].hasOwnProperty(userID)) {
-      DATABASE[roomID][userID].ready = !DATABASE[roomID][userID].ready;
-      syncGameState(roomID);
-
+    if (DATABASE.hasOwnProperty(roomID) && DATABASE[roomID].users.hasOwnProperty(userID)) {
+      DATABASE[roomID].users[userID].ready = !DATABASE[roomID].users[userID].ready;
+      
       // If all players are now ready, start game
-      if (DATABASE[roomID][userID].ready && allPlayersReady(roomID)) {
-        io.to(roomID).emit("gameStart", new Date());
+      if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
+        DATABASE[roomID].hasStarted = true;
       }
+      
+      syncGameState(roomID);
     }
   });
 

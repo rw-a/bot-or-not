@@ -25,7 +25,14 @@ export interface SocketData {
 
 }
 
-// As stored on the server
+/* Stored Server-side */
+export interface RoomData {
+  hasStarted: boolean
+  users: {
+    [key: string]: UserData
+  }
+}
+
 export interface UserData {
   username: string
   ready: boolean
@@ -35,14 +42,12 @@ export interface UserData {
   vote?: string
 }
 
+/* Accessible client-side. A subset of the data stored server-side */
 export const PUBLIC_USER_DATA = ["username", "ready", "points", "votes"] as const;
-export type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
+type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
+export type PublicUserData = Pick<UserData, PublicUserDataProperties>; // UserID and some properties have been removed
 
-export type PublicUserData = Pick<UserData, PublicUserDataProperties>;  // a subset of UserData accessible to the clients
-
-export interface RoomData {
-  [key: string]: UserData
-}
-
-// As accessible to the clients. UserID and some properties have been removed
-export type GameState = PublicUserData[];
+export interface GameState {
+  hasStarted: boolean
+  users: PublicUserData[]
+};
