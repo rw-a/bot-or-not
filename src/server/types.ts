@@ -7,7 +7,6 @@ export interface ServerToClientEvents {
   loginError: (errorMessage: string) => void
   loginSuccess: () => void
   syncGameState: (gameState: GameState) => void
-  gameStart: (time: Date) => void
 }
   
 export interface ClientToServerEvents {
@@ -28,6 +27,7 @@ export interface SocketData {
 /* Stored Server-side */
 export interface RoomData {
   hasStarted: boolean
+  gameStartTime: Date
   users: {
     [key: string]: UserData
   }
@@ -47,7 +47,6 @@ export const PUBLIC_USER_DATA = ["username", "ready", "points", "votes"] as cons
 type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
 export type PublicUserData = Pick<UserData, PublicUserDataProperties>; // UserID and some properties have been removed
 
-export interface GameState {
-  hasStarted: boolean
+export interface GameState extends Omit<RoomData, 'users'> {
   users: PublicUserData[]
 };

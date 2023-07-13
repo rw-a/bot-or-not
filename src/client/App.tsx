@@ -95,8 +95,10 @@ function GamePage({gameState, roomID, onReady}: GamePageProps) {
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <div className="flex justify-evenly">
+        {!gameState.hasStarted ? <>
         <Button onClick={onReady}>Ready</Button>
         <p>Room Code: {roomID}</p>
+        </> : "Game Started"}
       </div>
       <div className="flex">
         <div className="basis-1/4">
@@ -158,18 +160,13 @@ function App() {
       console.log(gameState, newGameState);
       setGameState(newGameState);
     }
-
-    function onGameStart(time: Date) {
-
-    }
     
     const EVENT_LISTENERS: ServerToClientEvents = {
       connect_error: onConnectError,
       disconnect: onDisconnect,
       loginError: onLoginError,
       loginSuccess: onLoginSuccess,
-      syncGameState: onSyncGameState,
-      gameStart: onGameStart
+      syncGameState: onSyncGameState
     };
 
     for (const [eventName, eventHandler] of Object.entries(EVENT_LISTENERS)) {

@@ -75,7 +75,7 @@ io.on("connect", (socket) => {
       socket.emit("loginError", "Room already exists.");
       return;
     } else {
-      DATABASE[roomID] = {hasStarted: false, users: {}};
+      DATABASE[roomID] = {hasStarted: false, gameStartTime: new Date(), users: {}};
     }
 
     DATABASE[roomID].users = {[userID]: createUser(username)};
@@ -105,6 +105,7 @@ io.on("connect", (socket) => {
       // If all players are now ready, start game
       if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
         DATABASE[roomID].hasStarted = true;
+        DATABASE[roomID].gameStartTime = new Date();
       }
       
       syncGameState(roomID);
