@@ -89,11 +89,12 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
 
 interface GamePageProps {
   roomID: string
+  userID: {current: string}
   gameState: GameState
   onReady: () => void
 }
 
-function GamePage({gameState, roomID, onReady}: GamePageProps) {
+function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
   const {
     seconds,
     minutes,
@@ -125,9 +126,9 @@ function GamePage({gameState, roomID, onReady}: GamePageProps) {
     pause();
 
     if (gameState.gamePhase === GamePhases.Writing) {
-      socket.emit("submitAnswer", answer);
+      socket.emit("submitAnswer", roomID, userID.current, answer);
     } else if (gameState.gamePhase === GamePhases.Voting) {
-      socket.emit("submitVote", vote);
+      socket.emit("submitVote", roomID, userID.current, vote);
     } else {
       console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
     }
@@ -241,15 +242,11 @@ function App() {
     socket.emit("toggleReady", roomID, userID.current);
   }
 
-  function moveToVoting() {
-
-  }
-
   return (
     <div className="container mx-auto px-4">
       {(!isAuthenticated) ? 
       <LoginPage onLogin={onLogin} loginError={loginError}></LoginPage> : 
-      <GamePage gameState={gameState} roomID={roomID} onReady={onReady}></GamePage>
+      <GamePage gameState={gameState} roomID={roomID} userID={userID} onReady={onReady}></GamePage>
       }
     </div>
   )

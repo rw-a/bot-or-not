@@ -14,8 +14,8 @@ export interface ClientToServerEvents {
   createRoom: (roomID: string, userID: string, username: string) => void
   joinRoom: (roomID: string, userID: string, username: string) => void
   toggleReady: (roomID: string, userID: string) => void
-  submitAnswer: (answer: string) => void
-  submitVote: (userIndex: number) => void
+  submitAnswer: (roomID: string, userID: string, answer: string) => void
+  submitVote: (roomID: string, userID: string, userIndex: number) => void
 }
 
 export interface InterServerEvents {
@@ -46,13 +46,12 @@ export interface UserData {
   username: string
   ready: boolean
   points: number
-  votes: number
   answer?: string
   vote?: string
 }
 
 /* Accessible client-side. A subset of the data stored server-side */
-export const PUBLIC_USER_DATA = ["username", "ready", "points", "votes"] as const;
+export const PUBLIC_USER_DATA = ["username", "ready", "points"] as const;
 type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
 export type PublicUserData = Pick<UserData, PublicUserDataProperties>; // UserID and some properties have been removed
 

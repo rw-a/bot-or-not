@@ -4,7 +4,7 @@ import ViteExpress from "vite-express";
 import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
   RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases } from "./types";
-import { WS_PORT } from "../config";
+import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION } from "../config";
 import { generateID, createUser } from "./utility";
 
 
@@ -104,15 +104,50 @@ io.on("connect", (socket) => {
     if (DATABASE.hasOwnProperty(roomID) && DATABASE[roomID].users.hasOwnProperty(userID)) {
       DATABASE[roomID].users[userID].ready = !DATABASE[roomID].users[userID].ready;
       
-      // If all players are now ready, start game
+      // If all players are now ready, start writing phase
       if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
         DATABASE[roomID].gamePhase = GamePhases.Writing;
         DATABASE[roomID].timerStartTime = new Date();
+
+        setTimeout(() => {
+          // Once writing phase finishes, start voting phase
+          DATABASE[roomID].gamePhase = GamePhases.Voting;
+          DATABASE[roomID].timerStartTime = new Date();
+          syncGameState(roomID);
+
+          setTimeout(() => {
+            // Once voting phase finishes
+            
+            /* TODO 
+            Finish game or loop back to writing then voting
+            Probably want to make the start writing phase and start voting phase into functions
+            */
+
+          }, (VOTING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+
+        }, (WRITING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
       }
       
       syncGameState(roomID);
     }
   });
+
+  socket.on("submitAnswer", (roomID: string, userID: string, answer: string) => {
+    if (DATABASE[roomID].gamePhase !== GamePhases.Writing) return;
+    DATABASE[roomID].users[userID].answer = answer;
+  }); 
+
+  socket.on("submitVote", (roomID: string, userID: string, userIndex: number) => {
+    /* TODO
+    this doesn't consider the fact that you can vote for the AI
+    May need to change index into first 10 characters of userID
+    */
+    if (DATABASE[roomID].gamePhase !== GamePhases.Voting) return;
+    const votedUserID = Object.keys(DATABASE[roomID].users)[userIndex];
+    const votedUser = DATABASE[roomID].users[votedUserID];
+    votedUser.points += POINTS_PER_VOTE;
+    DATABASE[roomID].users[userID].vote = votedUser.username;
+  }); 
 
   socket.onAny((event, ...args) => {
     console.log(event, args);
