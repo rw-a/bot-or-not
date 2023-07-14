@@ -11,6 +11,5 @@ export function createUser(username: string): UserData {
       username: username,
       ready: false,
       points: 0,
-      votes: 0
   };
 }
