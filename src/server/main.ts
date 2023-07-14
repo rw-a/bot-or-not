@@ -93,6 +93,10 @@ io.on("connect", (socket) => {
       return;
     }
 
+    /* TODO
+    Check that the room is currently in lobby phase
+    */
+
     DATABASE[roomID].users[userID] = createUser(username);
 
     socket.join(roomID);
@@ -122,7 +126,10 @@ io.on("connect", (socket) => {
             Finish game or loop back to writing then voting
             Probably want to make the start writing phase and start voting phase into functions
             */
-
+            
+            /* TODO
+            Rather than adding a leeway, automatically move on once all users have sent their request
+            */
           }, (VOTING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
 
         }, (WRITING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
