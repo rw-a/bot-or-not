@@ -112,7 +112,10 @@ function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
   });
 
   const [answer, setAnswer] = useState("");
+  const [hasAnswered, setHasAnswered] = useState(false);
+
   const [vote, setVote] = useState(-1);   // the index of the user which the player votes for (note for future: index may be unreliable)
+  const [hasVoted, setHasVoted] = useState(false);
 
   // Start timer once appropriate phase starts
   if (gameState.gamePhase === GamePhases.Writing && !isRunning) {
@@ -126,12 +129,26 @@ function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
     pause();
 
     if (gameState.gamePhase === GamePhases.Writing) {
-      socket.emit("submitAnswer", roomID, userID.current, answer);
+      if (!hasAnswered) {
+        submitAnswer();
+      }
     } else if (gameState.gamePhase === GamePhases.Voting) {
-      socket.emit("submitVote", roomID, userID.current, vote);
+      if (!hasVoted) {
+        setHasVoted(true);
+        socket.emit("submitVote", roomID, userID.current, vote);
+      }
     } else {
       console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
     }
+  }
+
+  function onAnswerChange(event: React.FormEvent<HTMLInputElement>) {
+    setAnswer(event.currentTarget.value);
+  }
+
+  function submitAnswer() {
+    setHasAnswered(true);
+    socket.emit("submitAnswer", roomID, userID.current, answer);
   }
 
   return (
@@ -153,8 +170,22 @@ function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
           </div>
           )}
         </div>
-        <div className="basis-3/4 border">
-          Main Game
+        <div className="basis-3/4 border flex">
+          {gameState.gamePhase === GamePhases.Lobby ? <>
+            Waiting for players...
+          </> : (gameState.gamePhase === GamePhases.Writing ? <>
+            <div className="flex flex-col basis-full justify-between">
+              <div>
+                Prompt: {gameState.prompt}
+              </div>
+              <div className="flex border-[1px] w-full">
+                <input type="text" value={answer} onChange={onAnswerChange} className="w-full"></input>
+                <button onClick={submitAnswer} className={`border-[1px] border-${hasAnswered ? "success" : "danger"}`}>Submit</button>
+              </div>
+            </div>
+          </> : <>
+            Vote for player
+          </>)}
         </div>
       </div>
     </div>
@@ -185,7 +216,7 @@ function App() {
 
     function onConnectError(error: Error) {
       /* Auto-connect is enabled. Maybe make an alert */
-      console.log(error);
+      console.error(error);
     }
 
     function onDisconnect() {
