@@ -33,11 +33,9 @@ const sessionMiddleware = session({
 io.engine.use(sessionMiddleware);
 
 const DATABASE: {[key:string]: RoomData} = {};
-/* TODO
-Refactor to use express-session middleware to save userID and roomID rather than sending it each time
-*/
 
 
+/* Helper Functions */
 function syncGameState(roomID: string) {
   const gameState = {} as GameState;
   for (const [key, value] of Object.entries(DATABASE[roomID])) {
@@ -50,7 +48,9 @@ function syncGameState(roomID: string) {
           // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
           publicUserData[userProperty] = userData[userProperty];
         }
-        users[publicUserData.username.slice(4)] = publicUserData;
+        // users[publicUserData.username.slice(4)] = publicUserData;
+        // WARNING: Currently sending full userIDs to each player. Players can spoof each other using this.
+        users[publicUserData.username] = publicUserData;
       }
       
       gameState.users = users;
