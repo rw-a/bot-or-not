@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
   RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases } from "./types";
 import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION } from "../config";
-import { generateID, createUser } from "./utility";
+import { generateID, createUser, getPrompt } from "./utility";
 
 
 /* Setup Server */
@@ -112,6 +112,7 @@ io.on("connect", (socket) => {
       if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
         DATABASE[roomID].gamePhase = GamePhases.Writing;
         DATABASE[roomID].timerStartTime = new Date();
+        DATABASE[roomID].prompt = getPrompt();
 
         setTimeout(() => {
           // Once writing phase finishes, start voting phase

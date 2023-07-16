@@ -151,6 +151,10 @@ function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
     socket.emit("submitAnswer", roomID, userID.current, answer);
   }
 
+  /* TODO
+  Make the input box bigger to support paragraph response
+  */
+
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <div className="flex justify-evenly">
