@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
   RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties } from "./types";
 import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
-import { generateID, createUser, getPrompt } from "./utility";
+import { generateID, createUser, getPrompt, saveSession } from "./utility";
 
 
 /* Setup Server */
@@ -74,9 +74,10 @@ function allPlayersReady(roomID: string) {
 }
 
 function startWritingPhase(roomID: string) {
-  DATABASE[roomID].gamePhase = GamePhases.Writing;
-  DATABASE[roomID].timerStartTime = new Date();
-  DATABASE[roomID].prompt = getPrompt();
+  const roomData = DATABASE[roomID];
+  roomData.gamePhase = GamePhases.Writing;
+  roomData.timerStartTime = new Date();
+  roomData.prompt = getPrompt();
   syncGameState(roomID);
 
   setTimeout(() => {    
@@ -90,13 +91,14 @@ function startWritingPhase(roomID: string) {
 }
 
 function startVotingPhase(roomID: string) {
-  DATABASE[roomID].gamePhase = GamePhases.Voting;
-  DATABASE[roomID].timerStartTime = new Date();
+  const room = DATABASE[roomID];
+  room.gamePhase = GamePhases.Voting;
+  room.timerStartTime = new Date();
   syncGameState(roomID);
 
   setTimeout(() => {
-    if (DATABASE[roomID].round < NUMBER_ROUNDS_PER_GAME) {
-      DATABASE[roomID].round += 1;
+    if (room.round < NUMBER_ROUNDS_PER_GAME) {
+      room.round += 1;
       startWritingPhase(roomID);
     } else {
       endGame(roomID);
@@ -140,21 +142,11 @@ io.on("connect", (socket) => {
     }
 
     DATABASE[roomID].users = {[userID]: createUser(username)};
+    saveSession(req, roomID, userID);
 
     socket.join(roomID);
     syncGameState(roomID);
     socket.emit("loginSuccess");
-
-    // Save the credentials to the session
-    req.session.reload((err) => {
-      if (err) {
-        console.log(err)
-        return socket.disconnect();
-      }
-      req.session.roomID = roomID;
-      req.session.userID = userID;
-      req.session.save();
-    });
   });
 
   socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
@@ -169,38 +161,56 @@ io.on("connect", (socket) => {
     }
 
     DATABASE[roomID].users[userID] = createUser(username);
+    saveSession(req, roomID, userID);
 
     socket.join(roomID);
     syncGameState(roomID);
     socket.emit("loginSuccess");
   });
 
-  socket.on("toggleReady", (roomID: string, userID: string) => {
-    if (DATABASE.hasOwnProperty(roomID) && DATABASE[roomID].users.hasOwnProperty(userID)) {
-      DATABASE[roomID].users[userID].ready = !DATABASE[roomID].users[userID].ready;
-      
-      // If all players are now ready, start writing phase
-      if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
-        startWritingPhase(roomID);
-      }
+  socket.on("toggleReady", () => {
+    const roomID = req.session.roomID;
+    const userID = req.session.userID;
+
+    if (!DATABASE.hasOwnProperty(roomID)) return;
+    const roomData = DATABASE[roomID];
+
+    if (!roomData.users.hasOwnProperty(userID)) return;
+    const userData = roomData.users[userID];
+
+    userData.ready = !userData.ready;
+    
+    // If all players are now ready, start writing phase
+    if (userData.ready && allPlayersReady(roomID)) {
+      startWritingPhase(roomID);
+    } else {
+      syncGameState(roomID);
     }
   });
 
-  socket.on("submitAnswer", (roomID: string, userID: string, answer: string) => {
-    if (DATABASE[roomID].gamePhase !== GamePhases.Writing) return;
-    DATABASE[roomID].users[userID].answer = answer;
+  socket.on("submitAnswer", (answer: string) => {
+    const roomID = req.session.roomID;
+    const userID = req.session.userID;
+    const roomData = DATABASE[roomID];
+
+    if (roomData.gamePhase !== GamePhases.Writing) return;
+    roomData.users[userID].answer = answer;
   }); 
 
-  socket.on("submitVote", (roomID: string, userID: string, userIndex: number) => {
+  socket.on("submitVote", (userIndex: number) => {
     /* TODO
     this doesn't consider the fact that you can vote for the AI
     May need to change index into first 10 characters of userID
     */
-    if (DATABASE[roomID].gamePhase !== GamePhases.Voting) return;
-    const votedUserID = Object.keys(DATABASE[roomID].users)[userIndex];
-    const votedUser = DATABASE[roomID].users[votedUserID];
+    const roomID = req.session.roomID;
+    const userID = req.session.userID;
+    const roomData = DATABASE[roomID];
+
+    if (roomData.gamePhase !== GamePhases.Voting) return;
+    const votedUserID = Object.keys(roomData.users)[userIndex];
+    const votedUser = roomData.users[votedUserID];
     votedUser.points += POINTS_PER_VOTE;
-    DATABASE[roomID].users[userID].vote = votedUser.username;
+    roomData.users[userID].vote = votedUser.username;
   }); 
 
   socket.onAny((event, ...args) => {

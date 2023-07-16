@@ -13,9 +13,9 @@ export interface ClientToServerEvents {
   generateRoomID: (callback: (roomID: string) => void) => void
   createRoom: (roomID: string, userID: string, username: string) => void
   joinRoom: (roomID: string, userID: string, username: string) => void
-  toggleReady: (roomID: string, userID: string) => void
-  submitAnswer: (roomID: string, userID: string, answer: string) => void
-  submitVote: (roomID: string, userID: string, userIndex: number) => void
+  toggleReady: () => void
+  submitAnswer: (answer: string) => void
+  submitVote: (userIndex: number) => void
 }
 
 export interface InterServerEvents {

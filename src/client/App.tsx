@@ -119,7 +119,7 @@ function App() {
   }
 
   function onReady() {
-    socket.emit("toggleReady", roomID, userID.current);
+    socket.emit("toggleReady");
   }
 
   function onTimerDone() {
@@ -132,7 +132,7 @@ function App() {
         /* TODO
         Randomly choose some to vote for
         */
-        socket.emit("submitVote", roomID, userID.current, vote);
+        socket.emit("submitVote", vote);
       }
     } else {
       console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
@@ -144,7 +144,7 @@ function App() {
   }
 
   function submitAnswer() {
-    socket.emit("submitAnswer", roomID, userID.current, answer);
+    socket.emit("submitAnswer", answer);
   }
 
   return (
