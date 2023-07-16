@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ChangeEventHandler } from 'react';
 import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
@@ -88,69 +88,18 @@ function LoginPage({onLogin, loginError}: LoginPageProps) {
 }
 
 interface GamePageProps {
-  roomID: string
-  userID: {current: string}
   gameState: GameState
+  roomID: string
+  minutes: number
+  seconds: number
+  answer: string
+  vote: string
   onReady: () => void
+  onAnswerChange: ChangeEventHandler<HTMLInputElement>
+  submitAnswer: () => void
 }
 
-function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
-  const {
-    seconds,
-    minutes,
-    hours,
-    days,
-    isRunning,
-    start,
-    pause,
-    resume,
-    restart,
-  } = useTimer({ 
-    expiryTimestamp: new Date(new Date(gameState.timerStartTime).getTime() + WRITING_PHASE_DURATION * 1000), 
-    onExpire: onTimerDone,
-    autoStart: false
-  });
-
-  const [answer, setAnswer] = useState("");
-  const [hasAnswered, setHasAnswered] = useState(false);
-
-  const [vote, setVote] = useState(-1);   // the index of the user which the player votes for (note for future: index may be unreliable)
-  const [hasVoted, setHasVoted] = useState(false);
-
-  // Start timer once appropriate phase starts
-  if (gameState.gamePhase === GamePhases.Writing && !isRunning) {
-    start();
-  }
-  if (gameState.gamePhase === GamePhases.Voting && !isRunning) {
-    restart(new Date(new Date(gameState.timerStartTime).getTime() + VOTING_PHASE_DURATION * 1000));
-  }
-
-  function onTimerDone() {
-    pause();
-
-    if (gameState.gamePhase === GamePhases.Writing) {
-      if (!hasAnswered) {
-        submitAnswer();
-      }
-    } else if (gameState.gamePhase === GamePhases.Voting) {
-      if (!hasVoted) {
-        setHasVoted(true);
-        socket.emit("submitVote", roomID, userID.current, vote);
-      }
-    } else {
-      console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
-    }
-  }
-
-  function onAnswerChange(event: React.FormEvent<HTMLInputElement>) {
-    setAnswer(event.currentTarget.value);
-  }
-
-  function submitAnswer() {
-    setHasAnswered(true);
-    socket.emit("submitAnswer", roomID, userID.current, answer);
-  }
-
+function GamePage({gameState, roomID, minutes, seconds, answer, vote, onReady, onAnswerChange, submitAnswer}: GamePageProps) {
   /* TODO
   Make the input box bigger to support paragraph response
   */
@@ -185,7 +134,7 @@ function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
               </div>
               <div className="flex border-[1px] w-full">
                 <input type="text" value={answer} onChange={onAnswerChange} className="w-full"></input>
-                <button onClick={submitAnswer} className={`border-[1px] border-${hasAnswered ? "success" : "danger"}`}>Submit</button>
+                <button onClick={submitAnswer} className={`border-[1px] border-${answer ? "success" : "danger"}`}>Submit</button>
               </div>
             </div>
           </> : (gameState.gamePhase === GamePhases.Voting) ? <>
@@ -206,6 +155,25 @@ function App() {
   const [loginError, setLoginError] = useState("");
 
   const [gameState, setGameState] = useState({} as GameState);
+
+  const [answer, setAnswer] = useState("");
+  const [vote, setVote] = useState(0);   // the index of the user which the player votes for (note for future: index may be unreliable)
+
+  const {
+    seconds,
+    minutes,
+    hours,
+    days,
+    isRunning,
+    start,
+    pause,
+    resume,
+    restart,
+  } = useTimer({ 
+    expiryTimestamp: new Date(), 
+    onExpire: onTimerDone,
+    autoStart: false
+  });
 
   useEffect(() => {
     /* 
@@ -240,6 +208,14 @@ function App() {
 
     function onSyncGameState(newGameState: GameState) {
       setGameState(newGameState);
+
+      if (minutes * 60 + seconds === 0) {
+        if (newGameState.gamePhase === GamePhases.Writing) {
+          restart(new Date(new Date(newGameState.timerStartTime).getTime() + WRITING_PHASE_DURATION * 1000));
+        } else if (newGameState.gamePhase === GamePhases.Voting) {
+          restart(new Date(new Date(newGameState.timerStartTime).getTime() + VOTING_PHASE_DURATION * 1000));
+        }
+      }
     }
     
     const EVENT_LISTENERS: ServerToClientEvents = {
@@ -280,11 +256,49 @@ function App() {
     socket.emit("toggleReady", roomID, userID.current);
   }
 
+  function onTimerDone() {
+    if (gameState.gamePhase === GamePhases.Writing) {
+      if (!answer) {
+        submitAnswer();
+      }
+    } else if (gameState.gamePhase === GamePhases.Voting) {
+      if (!vote) {
+        /* TODO
+        Randomly choose some to vote for
+        */
+        socket.emit("submitVote", roomID, userID.current, vote);
+      }
+    } else {
+      console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
+    }
+  }
+
+  function onAnswerChange(event: React.FormEvent<HTMLInputElement>) {
+    setAnswer(event.currentTarget.value);
+  }
+
+  function submitAnswer() {
+    socket.emit("submitAnswer", roomID, userID.current, answer);
+  }
+
   return (
     <div className="container mx-auto px-4">
       {(!isAuthenticated) ? 
-      <LoginPage onLogin={onLogin} loginError={loginError}></LoginPage> : 
-      <GamePage gameState={gameState} roomID={roomID} userID={userID} onReady={onReady}></GamePage>
+      <LoginPage 
+        onLogin={onLogin} 
+        loginError={loginError}
+      ></LoginPage> : 
+      <GamePage 
+        gameState={gameState} 
+        roomID={roomID} 
+        minutes={minutes}
+        seconds={seconds}
+        answer={answer}
+        vote={vote}
+        onReady={onReady} 
+        onAnswerChange={onAnswerChange} 
+        submitAnswer={submitAnswer}
+      ></GamePage>
       }
     </div>
   )
