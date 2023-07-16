@@ -42,7 +42,7 @@ function syncGameState(roomID: string) {
     if (key == "users") {
       const users: {[key: string]: PublicUserData} = {};
 
-      for (const userData of Object.values(value as {[key: string]: UserData})) {
+      for (const [userID, userData] of Object.entries(value as {[key: string]: UserData})) {
         const publicUserData = {} as PublicUserData;
         for (const userProperty of PUBLIC_USER_DATA) {
           // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
@@ -50,7 +50,7 @@ function syncGameState(roomID: string) {
         }
         // users[publicUserData.username.slice(4)] = publicUserData;
         // WARNING: Currently sending full userIDs to each player. Players can spoof each other using this.
-        users[publicUserData.username] = publicUserData;
+        users[userID] = publicUserData;
       }
       
       gameState.users = users;
@@ -197,7 +197,7 @@ io.on("connect", (socket) => {
     roomData.users[userID].answer = answer;
   }); 
 
-  socket.on("submitVote", (userIndex: number) => {
+  socket.on("submitVote", (votedUserID: string) => {
     /* TODO
     this doesn't consider the fact that you can vote for the AI
     May need to change index into first 10 characters of userID
@@ -207,7 +207,9 @@ io.on("connect", (socket) => {
     const roomData = DATABASE[roomID];
 
     if (roomData.gamePhase !== GamePhases.Voting) return;
-    const votedUserID = Object.keys(roomData.users)[userIndex];
+    if (!roomData.users.hasOwnProperty(votedUserID)) return;
+    if (votedUserID === userID) return;
+
     const votedUser = roomData.users[votedUserID];
     votedUser.points += POINTS_PER_VOTE;
     roomData.users[userID].vote = votedUser.username;

@@ -7,12 +7,8 @@ import { ServerToClientEvents, GameState, GamePhases } from '../server/types';
 import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
+import { generateID, getRandomInt } from './utility';
 
-function generateID (len?: number) {
-  var arr = new Uint8Array((len || 40) / 2)
-  window.crypto.getRandomValues(arr)
-  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
-}
 
 function App() {
   const userID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
@@ -125,14 +121,17 @@ function App() {
   function onTimerDone() {
     if (gameState.gamePhase === GamePhases.Writing) {
       if (!answer) {
+        // If the player hasn't submitted their answer yet.
         submitAnswer();
       }
     } else if (gameState.gamePhase === GamePhases.Voting) {
       if (!vote) {
-        /* TODO
-        Randomly choose some to vote for
-        */
-        socket.emit("submitVote", vote);
+        // If the player didn't vote for anyone
+
+        // Randomly choose a player to vote for
+        const userIDs = Object.keys(gameState.users).filter((id) => id !== userID.current);
+        const randomUserID = userIDs[getRandomInt(0, userIDs.length)];
+        socket.emit("submitVote", randomUserID);
       }
     } else {
       console.error("Timer finished on unexpected game phase:", gameState.gamePhase);

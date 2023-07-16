@@ -15,7 +15,7 @@ export interface ClientToServerEvents {
   joinRoom: (roomID: string, userID: string, username: string) => void
   toggleReady: () => void
   submitAnswer: (answer: string) => void
-  submitVote: (userIndex: number) => void
+  submitVote: (votedUserID: string) => void
 }
 
 export interface InterServerEvents {
