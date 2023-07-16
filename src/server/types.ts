@@ -31,6 +31,7 @@ export enum GamePhases {
   Lobby,
   Writing,
   Voting,
+  End
 }
 
 export interface RoomData {

@@ -188,8 +188,10 @@ function GamePage({gameState, roomID, userID, onReady}: GamePageProps) {
                 <button onClick={submitAnswer} className={`border-[1px] border-${hasAnswered ? "success" : "danger"}`}>Submit</button>
               </div>
             </div>
-          </> : <>
+          </> : (gameState.gamePhase === GamePhases.Voting) ? <>
             Vote for player
+          </> : <>
+            Game Done
           </>)}
         </div>
       </div>

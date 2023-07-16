@@ -86,8 +86,15 @@ function startVotingPhase(roomID: string) {
 
     if (DATABASE[roomID].roundsPlayed < NUMBER_ROUNDS_PER_GAME) {
       startWritingPhase(roomID);
+    } else {
+      endGame(roomID);
     }
   }, (VOTING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+}
+
+function endGame(roomID: string) {
+  DATABASE[roomID].gamePhase = GamePhases.End;
+  syncGameState(roomID);
 }
 
 
