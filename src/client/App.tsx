@@ -1,151 +1,17 @@
-import { useEffect, useState, useRef, ChangeEventHandler } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
 import './App.css'
 import { ServerToClientEvents, GameState, GamePhases } from '../server/types';
 import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
-import { Button, TextInput } from './components/components';
+import { LoginPage } from "./components/login_page";
+import { GamePage } from './components/game_page';
 
 function generateID (len?: number) {
   var arr = new Uint8Array((len || 40) / 2)
   window.crypto.getRandomValues(arr)
   return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join('')
-}
-
-interface LoginPageProps {
-  onLogin: (roomCode: string, newUsername: string, create: boolean) => void
-  loginError: string
-}
-
-function LoginPage({onLogin, loginError}: LoginPageProps) {
-  const [username, setUsername] = useState("");
-  const [roomID, setRoomID] = useState("");
-
-  // Tracks whether the user has tried to submit the login
-  const [triedLogin, setTriedLogin] = useState(false);  // login = join OR create room
-  const [triedJoin, setTriedJoin] = useState(false);
-
-  function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
-    setUsername(event.currentTarget.value);
-  }
-
-  function handleRoomIDChange(event: React.FormEvent<HTMLInputElement>) {
-    setRoomID(event.currentTarget.value);
-  }
-
-  function handleJoin() {
-    if (!username) {
-      setTriedLogin(true);
-      setTriedJoin(true);
-      return;
-    }
-
-    onLogin(roomID, username, false);
-  }
-
-  async function handleCreate() {
-    if (!username) {
-      setTriedLogin(true);
-      return;
-    }
-
-    const roomID: string = await socket.emitWithAck("generateRoomID");
-    onLogin(roomID, username, true);
-  }
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">Title</h1>
-      <div>
-        <p className="text-lg font-medium">Username</p>
-        <TextInput 
-          required 
-          value={username} 
-          placeholder='Enter your name...'
-          onChange={handleUsernameChange}
-          verify={triedLogin}
-        ></TextInput>
-      </div>
-      <div className="flex justify-around items-center">
-        <div>
-          <p className="text-lg font-medium">Room Code</p>
-          <TextInput 
-            required
-            value={roomID} 
-            onChange={handleRoomIDChange}
-            verify={Boolean(loginError) || triedJoin}
-            errorText={loginError}
-          ></TextInput>
-          <Button onClick={handleJoin}>Join Room</Button>
-        </div>
-        <div>
-          <Button onClick={handleCreate}>Create Room</Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface GamePageProps {
-  gameState: GameState
-  roomID: string
-  minutes: number
-  seconds: number
-  answer: string
-  vote: string
-  onReady: () => void
-  onAnswerChange: ChangeEventHandler<HTMLInputElement>
-  submitAnswer: () => void
-}
-
-function GamePage({gameState, roomID, minutes, seconds, answer, vote, onReady, onAnswerChange, submitAnswer}: GamePageProps) {
-  /* TODO
-  Make the input box bigger to support paragraph response
-  */
-
-  return (
-    <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
-      <div className="flex justify-evenly">
-        {gameState.gamePhase === GamePhases.Lobby ? <>
-          <Button onClick={onReady}>Ready</Button>
-          <p>Room Code: {roomID}</p>
-        </> : <>
-          <p>Time Remaining: {minutes * 60 + seconds}</p>
-          <p>Round: {gameState.round}</p>
-        </>}
-      </div>
-      <div className="flex">
-        <div className="basis-1/4">
-          {Object.entries(gameState.users).map(([index, user]) => 
-          <div key={index} className={`border-[1px] border-${user.ready ? "success" : "danger"}`}>
-            <p>{user.username}</p>
-            <p>Points: {user.points}</p>
-          </div>
-          )}
-        </div>
-        <div className="basis-3/4 border flex">
-          {gameState.gamePhase === GamePhases.Lobby ? <>
-            Waiting for players...
-          </> : (gameState.gamePhase === GamePhases.Writing ? <>
-            <div className="flex flex-col basis-full justify-between">
-              <div>
-                Prompt: {gameState.prompt}
-              </div>
-              <div className="flex border-[1px] w-full">
-                <input type="text" value={answer} onChange={onAnswerChange} className="w-full"></input>
-                <button onClick={submitAnswer} className={`border-[1px] border-${answer ? "success" : "danger"}`}>Submit</button>
-              </div>
-            </div>
-          </> : (gameState.gamePhase === GamePhases.Voting) ? <>
-            Vote for player
-          </> : <>
-            Game Done
-          </>)}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function App() {
