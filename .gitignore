@@ -13,9 +13,8 @@ dist-ssr
 *.local
 
 # LLM Files
-src/server/*
-!src/server/**/
-!src/server/*.*
+src/server/llm/*
+!src/server/llm/*.*
 *.bin
 
 # Editor directories and files
