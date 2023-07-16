@@ -4,7 +4,7 @@ import ViteExpress from "vite-express";
 import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
   RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases } from "./types";
-import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION } from "../config";
+import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
 import { generateID, createUser, getPrompt } from "./utility";
 
 
@@ -20,6 +20,9 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 io.listen(WS_PORT);
 
 const DATABASE: {[key:string]: RoomData} = {};
+/* TODO
+Refactor to use express-session middleware to save userID and roomID rather than sending it each time
+*/
 
 
 function syncGameState(roomID: string) {
@@ -57,6 +60,36 @@ function allPlayersReady(roomID: string) {
   return true;
 }
 
+function startWritingPhase(roomID: string) {
+  DATABASE[roomID].gamePhase = GamePhases.Writing;
+  DATABASE[roomID].timerStartTime = new Date();
+  DATABASE[roomID].prompt = getPrompt();
+  syncGameState(roomID);
+
+  setTimeout(() => {    
+    // Once writing phase finishes
+    startVotingPhase(roomID);
+  }, (WRITING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+
+  /* TODO
+  Rather than adding a leeway, automatically move on once all users have sent their request
+  */
+}
+
+function startVotingPhase(roomID: string) {
+  DATABASE[roomID].gamePhase = GamePhases.Voting;
+  DATABASE[roomID].timerStartTime = new Date();
+  syncGameState(roomID);
+
+  setTimeout(() => {
+    DATABASE[roomID].roundsPlayed += 1;
+
+    if (DATABASE[roomID].roundsPlayed < NUMBER_ROUNDS_PER_GAME) {
+      startWritingPhase(roomID);
+    }
+  }, (VOTING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+}
+
 
 /* Socket Handling */
 io.on("connect", (socket) => {
@@ -77,7 +110,12 @@ io.on("connect", (socket) => {
       return;
     } else {
       // Create room with initial game state
-      DATABASE[roomID] = {gamePhase: GamePhases.Lobby, timerStartTime: new Date(), users: {}};
+      DATABASE[roomID] = {
+        gamePhase: GamePhases.Lobby, 
+        timerStartTime: new Date(), 
+        users: {}, 
+        roundsPlayed: 0
+      };
     }
 
     DATABASE[roomID].users = {[userID]: createUser(username)};
@@ -111,33 +149,8 @@ io.on("connect", (socket) => {
       
       // If all players are now ready, start writing phase
       if (DATABASE[roomID].users[userID].ready && allPlayersReady(roomID)) {
-        DATABASE[roomID].gamePhase = GamePhases.Writing;
-        DATABASE[roomID].timerStartTime = new Date();
-        DATABASE[roomID].prompt = getPrompt();
-
-        setTimeout(() => {
-          // Once writing phase finishes, start voting phase
-          DATABASE[roomID].gamePhase = GamePhases.Voting;
-          DATABASE[roomID].timerStartTime = new Date();
-          syncGameState(roomID);
-
-          setTimeout(() => {
-            // Once voting phase finishes
-            
-            /* TODO 
-            Finish game or loop back to writing then voting
-            Probably want to make the start writing phase and start voting phase into functions
-            */
-            
-            /* TODO
-            Rather than adding a leeway, automatically move on once all users have sent their request
-            */
-          }, (VOTING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
-
-        }, (WRITING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+        startWritingPhase(roomID);
       }
-      
-      syncGameState(roomID);
     }
   });
 

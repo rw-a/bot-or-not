@@ -37,6 +37,7 @@ export interface RoomData {
   gamePhase: GamePhases
   timerStartTime: Date   // WARNING: this gets converted into string form when sent over socket.io
   prompt?: string
+  roundsPlayed: number
   users: {
     [key: string]: UserData
   }
