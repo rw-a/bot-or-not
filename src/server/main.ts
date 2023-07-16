@@ -42,7 +42,7 @@ function syncGameState(roomID: string) {
   const gameState = {} as GameState;
   for (const [key, value] of Object.entries(DATABASE[roomID])) {
     if (key == "users") {
-      const users: PublicUserData[] = [];
+      const users: {[key: string]: PublicUserData} = {};
 
       for (const userData of Object.values(value as {[key: string]: UserData})) {
         const publicUserData = {} as PublicUserData;
@@ -50,7 +50,7 @@ function syncGameState(roomID: string) {
           // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
           publicUserData[userProperty] = userData[userProperty];
         }
-        users.push(publicUserData);
+        users[publicUserData.username.slice(4)] = publicUserData;
       }
       
       gameState.users = users;

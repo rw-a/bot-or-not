@@ -63,5 +63,7 @@ type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
 export type PublicUserData = Pick<UserData, PublicUserDataProperties>; // UserID and some properties have been removed
 
 export interface GameState extends Omit<RoomData, 'users'> {
-  users: PublicUserData[]
+  users: {
+    [key: string]: PublicUserData
+  }
 };

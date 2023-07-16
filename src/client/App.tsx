@@ -23,7 +23,7 @@ function App() {
   const [gameState, setGameState] = useState({} as GameState);
 
   const [answer, setAnswer] = useState("");
-  const [vote, setVote] = useState(0);   // the index of the user which the player votes for (note for future: index may be unreliable)
+  const [vote, setVote] = useState("");   // the index of the user which the player votes for (note for future: index may be unreliable)
 
   const {
     seconds,
