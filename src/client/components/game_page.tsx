@@ -41,7 +41,9 @@ export function GamePage({ gameState, roomID, minutes, seconds, answer, vote, on
         </div>
         <div className="basis-3/4 border flex">
           {gameState.gamePhase === GamePhases.Lobby ? <>
-            Waiting for players...
+            {Object.keys(gameState.users).length < 2 ? 
+            "Waiting for more players to join..."
+            : "Waiting for players to ready up..."}
           </> : (gameState.gamePhase === GamePhases.Writing ? <>
             <div className="flex flex-col basis-full justify-between">
               <div>

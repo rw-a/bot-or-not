@@ -181,7 +181,7 @@ io.on("connect", (socket) => {
     userData.ready = !userData.ready;
     
     // If all players are now ready, start writing phase
-    if (userData.ready && allPlayersReady(roomID)) {
+    if (userData.ready && Object.keys(roomData.users).length >= 2 && allPlayersReady(roomID)) {
       startWritingPhase(roomID);
     } else {
       syncGameState(roomID);
