@@ -93,9 +93,10 @@ io.on("connect", (socket) => {
       return;
     }
 
-    /* TODO
-    Check that the room is currently in lobby phase
-    */
+    if (DATABASE[roomID].gamePhase !== GamePhases.Lobby) {
+      socket.emit("loginError", "This room has already started.");
+      return;
+    }
 
     DATABASE[roomID].users[userID] = createUser(username);
 
