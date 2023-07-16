@@ -1,9 +1,11 @@
 import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
+import session, { Session } from "express-session";
 import dotenv from "dotenv";
+
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
-  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases } from "./types";
+  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties } from "./types";
 import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
 import { generateID, createUser, getPrompt } from "./utility";
 
@@ -14,10 +16,21 @@ dotenv.config();
 const app = express();
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>({
   cors: {
-    origin: `http://localhost:${process.env.SERVER_PORT}`
+    origin: `http://localhost:${process.env.SERVER_PORT}`,
+    credentials: true
   }
 });
 io.listen(WS_PORT);
+
+const sessionMiddleware = session({
+  secret: "fngbdjfhglerftertwr",
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    maxAge: 10 * 60 * 1000  // in ms
+  }
+});
+io.engine.use(sessionMiddleware);
 
 const DATABASE: {[key:string]: RoomData} = {};
 /* TODO
@@ -99,6 +112,8 @@ function endGame(roomID: string) {
 
 /* Socket Handling */
 io.on("connect", (socket) => {
+  const req = socket.request;
+
   socket.on("generateRoomID", (callback: (roomID: string) => void) => {
     // Generate roomID until an unonccupied one is found
     let roomID: string;
@@ -129,6 +144,17 @@ io.on("connect", (socket) => {
     socket.join(roomID);
     syncGameState(roomID);
     socket.emit("loginSuccess");
+
+    // Save the credentials to the session
+    req.session.reload((err) => {
+      if (err) {
+        console.log(err)
+        return socket.disconnect();
+      }
+      req.session.roomID = roomID;
+      req.session.userID = userID;
+      req.session.save();
+    });
   });
 
   socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
@@ -182,6 +208,11 @@ io.on("connect", (socket) => {
   });
 });
 
+declare module "http" {
+  interface IncomingMessage {
+      session: Session & SessionProperties
+  }
+}
 
 ViteExpress.listen(app, Number(process.env.SERVER_PORT), () => {
   console.log(`Starting server on port ${process.env.SERVER_PORT}...`)

@@ -26,6 +26,11 @@ export interface SocketData {
 
 }
 
+export interface SessionProperties {
+  userID: string
+  roomID: string
+}
+
 /* Stored Server-side */
 export enum GamePhases {
   Lobby,
