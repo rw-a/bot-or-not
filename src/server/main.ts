@@ -82,9 +82,8 @@ function startVotingPhase(roomID: string) {
   syncGameState(roomID);
 
   setTimeout(() => {
-    DATABASE[roomID].roundsPlayed += 1;
-
-    if (DATABASE[roomID].roundsPlayed < NUMBER_ROUNDS_PER_GAME) {
+    if (DATABASE[roomID].round < NUMBER_ROUNDS_PER_GAME) {
+      DATABASE[roomID].round += 1;
       startWritingPhase(roomID);
     } else {
       endGame(roomID);
@@ -121,7 +120,7 @@ io.on("connect", (socket) => {
         gamePhase: GamePhases.Lobby, 
         timerStartTime: new Date(), 
         users: {}, 
-        roundsPlayed: 0
+        round: 1
       };
     }
 

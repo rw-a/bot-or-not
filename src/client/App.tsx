@@ -112,7 +112,7 @@ function GamePage({gameState, roomID, minutes, seconds, answer, vote, onReady, o
           <p>Room Code: {roomID}</p>
         </> : <>
           <p>Time Remaining: {minutes * 60 + seconds}</p>
-          <p>Round: {gameState.roundsPlayed + 1}</p>
+          <p>Round: {gameState.round}</p>
         </>}
       </div>
       <div className="flex">
