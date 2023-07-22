@@ -3,7 +3,7 @@ import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
 import './App.css'
-import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError } from '../server/types';
+import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError, SessionInfo } from '../server/types';
 import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
@@ -11,7 +11,8 @@ import { generateID, getRandomInt } from '../utility';
 
 
 function App() {
-  const userID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
+  const sessionID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
+  const userID = useRef("");
   const [roomID, setRoomID] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState({} as LoginError);
@@ -38,18 +39,10 @@ function App() {
   });
 
   useEffect(() => {
-    /* 
-    TODO: Way to restore session if you close tab
-    Note: currently does nothing
     const storedSessionID = localStorage.getItem("sessionID");
     if (storedSessionID) {
-      setIsAuthenticated(true);
-      socket.auth = {
-        sessionID: storedSessionID 
-      };
-      socket.connect();
+      restoreSession(storedSessionID);
     } 
-    */
 
     function onConnectError(error: Error) {
       /* Auto-connect is enabled. Maybe make an alert */
@@ -68,7 +61,9 @@ function App() {
       setLoginError(loginError);
     }
 
-    function onLoginSuccess() {
+    function onLoginSuccess(newSessionID: string) {
+      sessionID.current = newSessionID;
+      localStorage.setItem("sessionID", newSessionID);
       setIsAuthenticated(true);
     }
 
@@ -116,6 +111,15 @@ function App() {
     } else {
       socket.emit("joinRoom", newRoomID, userID.current, newUsername);
     }
+  }
+
+  async function restoreSession(storedSessionID: string) {
+    const sessionInfo: SessionInfo = await socket.emitWithAck("restoreSession", storedSessionID);
+    sessionID.current = storedSessionID;
+    userID.current = sessionInfo.userID;
+    setRoomID(sessionInfo.roomID);
+    setIsAuthenticated(true);
+    setGameState(sessionInfo.gameState);
   }
 
   function onReady() {

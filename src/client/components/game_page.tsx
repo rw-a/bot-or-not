@@ -53,7 +53,7 @@ function TopBar({gameState, roomID, minutes, seconds, onReady, className}: TopBa
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>
         <Button onClick={onReady}>Ready</Button>
-        <p>Room Code: {roomID}</p>
+        <p>Room Code: <span className="font-mono">{roomID}</span></p>
       </> : <>
         <p>Time Remaining: {minutes * 60 + seconds}</p>
         <p>Round: {gameState.round}</p>

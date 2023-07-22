@@ -6,7 +6,7 @@ export interface ServerToClientEvents {
 
   // Custom events
   loginError: (errorType: LoginErrorType, errorMessage: string) => void
-  loginSuccess: () => void
+  loginSuccess: (sessionID: string) => void
   syncGameState: (gameState: GameState) => void
 }
   
@@ -14,6 +14,7 @@ export interface ClientToServerEvents {
   generateRoomID: (callback: (roomID: string) => void) => void
   createRoom: (roomID: string, userID: string, username: string) => void
   joinRoom: (roomID: string, userID: string, username: string) => void
+  restoreSession: (sessionID: string, callback: (sessionInfo: SessionInfo) => void) => void
   toggleReady: () => void
   submitAnswer: (answer: string) => void
   submitVote: (votedUserID: string) => void
@@ -31,6 +32,12 @@ export interface SocketData {
 export interface SessionProperties {
   userID: string
   roomID: string
+}
+
+export interface SessionInfo {
+  roomID: string, 
+  userID: string, 
+  gameState: GameState
 }
 
 export type LoginErrorType = "room" | "username";

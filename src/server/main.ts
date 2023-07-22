@@ -5,10 +5,11 @@ import session, { Session } from "express-session";
 import dotenv from "dotenv";
 
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
-  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties } from "./types";
+  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties, SessionInfo } from "./types";
 import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
 import { createUser, getPrompt, saveSession } from "./utility";
 import { generateID } from "../utility";
+import { IncomingMessage } from "http";
 
 
 /* Setup Server */
@@ -34,6 +35,7 @@ const sessionMiddleware = session({
 io.engine.use(sessionMiddleware);
 
 const DATABASE: {[key:string]: RoomData} = {};
+const SESSIONS: {[key:string]: {userID: string, roomID: string}} = {};
 
 
 /* Helper Functions */
@@ -46,8 +48,9 @@ function userAlreadyExists(roomID: string, username: string) {
   return false;
 }
 
-function syncGameState(roomID: string) {
+function getGameState(roomID: string) {
   const gameState = {} as GameState;
+
   for (const [key, value] of Object.entries(DATABASE[roomID])) {
     if (key == "users") {
       const users: {[key: string]: PublicUserData} = {};
@@ -58,8 +61,6 @@ function syncGameState(roomID: string) {
           // @ts-ignore Typescript goes crazy because we are constructing PublicUserData from nothing
           publicUserData[userProperty] = userData[userProperty];
         }
-        // users[publicUserData.username.slice(4)] = publicUserData;
-        // WARNING: Currently sending full userIDs to each player. Players can spoof each other using this.
         users[userID] = publicUserData;
       }
       
@@ -71,6 +72,11 @@ function syncGameState(roomID: string) {
     }
   }
 
+  return gameState;
+}
+
+function syncGameState(roomID: string) {
+  const gameState = getGameState(roomID);
   io.to(roomID).emit("syncGameState", gameState);
 }
 
@@ -124,7 +130,7 @@ function endGame(roomID: string) {
 
 /* Socket Handling */
 io.on("connect", (socket) => {
-  const req = socket.request;
+  const req = socket.request as IncomingMessage & {sessionID: string};
 
   socket.on("generateRoomID", (callback: (roomID: string) => void) => {
     // Generate roomID until an unonccupied one is found
@@ -153,10 +159,11 @@ io.on("connect", (socket) => {
 
     DATABASE[roomID].users = {[userID]: createUser(username)};
     saveSession(req, roomID, userID);
+    SESSIONS[req.sessionID] = {roomID, userID};
 
     socket.join(roomID);
     syncGameState(roomID);
-    socket.emit("loginSuccess");
+    socket.emit("loginSuccess", req.sessionID);
   });
 
   socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
@@ -179,10 +186,27 @@ io.on("connect", (socket) => {
 
     DATABASE[roomID].users[userID] = createUser(username);
     saveSession(req, roomID, userID);
+    SESSIONS[req.sessionID] = {roomID, userID};
 
     socket.join(roomID);
     syncGameState(roomID);
-    socket.emit("loginSuccess");
+    socket.emit("loginSuccess", req.sessionID);
+  });
+
+  socket.on("restoreSession", (sessionID: string, callback: (sessionInfo: SessionInfo) => void) => {
+    if (!SESSIONS.hasOwnProperty(sessionID)) return;
+
+    const userID = SESSIONS[sessionID].userID;
+    const roomID = SESSIONS[sessionID].roomID;
+    const gameState = getGameState(roomID);
+
+    socket.join(roomID);
+    const sessionInfo = {
+      roomID,
+      userID,
+      gameState
+    }
+    callback(sessionInfo);
   });
 
   socket.on("toggleReady", () => {
