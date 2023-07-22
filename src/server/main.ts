@@ -36,6 +36,15 @@ const DATABASE: {[key:string]: RoomData} = {};
 
 
 /* Helper Functions */
+function userAlreadyExists(roomID: string, username: string) {
+  for (const user of Object.values(DATABASE[roomID].users)) {
+    if (user.username === username) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function syncGameState(roomID: string) {
   const gameState = {} as GameState;
   for (const [key, value] of Object.entries(DATABASE[roomID])) {
@@ -157,6 +166,13 @@ io.on("connect", (socket) => {
 
     if (DATABASE[roomID].gamePhase !== GamePhases.Lobby) {
       socket.emit("loginError", "This room has already started.");
+      return;
+    }
+
+    username = username.trim();
+
+    if (userAlreadyExists(roomID, username)) {
+      socket.emit("loginError", "Username already taken.");
       return;
     }
 
