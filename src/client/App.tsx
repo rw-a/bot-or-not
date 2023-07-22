@@ -22,6 +22,7 @@ function App() {
 
   const [answer, setAnswer] = useState("");
   const [vote, setVote] = useState("");   // the index of the user which the player votes for (note for future: index may be unreliable)
+  const [submittedAnswer, setSubmittedAnswer] = useState("");
 
   const {
     seconds,
@@ -171,6 +172,7 @@ function App() {
   }
 
   function submitAnswer() {
+    setSubmittedAnswer(answer);
     socket.emit("submitAnswer", answer);
   }
 
@@ -188,6 +190,7 @@ function App() {
         minutes={minutes}
         seconds={seconds}
         answer={answer}
+        submittedAnswer={submittedAnswer}
         vote={vote}
         onReady={onReady} 
         onLeave={onLeave} 
