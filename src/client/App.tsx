@@ -165,7 +165,7 @@ function App() {
     }
   }
 
-  function onAnswerChange(event: React.FormEvent<HTMLInputElement>) {
+  function onAnswerChange(event: React.FormEvent<HTMLTextAreaElement>) {
     setAnswer(event.currentTarget.value);
   }
 

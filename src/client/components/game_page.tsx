@@ -1,4 +1,4 @@
-import { ChangeEventHandler } from 'react';
+import { ChangeEventHandler, FormEventHandler } from 'react';
 import { Button } from './components';
 import { GameState, GamePhases } from '../../server/types';
 
@@ -12,7 +12,7 @@ interface GamePageProps {
   vote: string
   onReady: () => void
   onLeave: () => void
-  onAnswerChange: ChangeEventHandler<HTMLInputElement>
+  onAnswerChange: FormEventHandler<HTMLTextAreaElement>
   submitAnswer: () => void
 }
 
@@ -96,15 +96,12 @@ function SidePanel({gameState, className}: SidePanelProps) {
 interface MainPanelProps {
   gameState: GameState
   answer: string
-  onAnswerChange: ChangeEventHandler<HTMLInputElement>
+  onAnswerChange: FormEventHandler<HTMLTextAreaElement>
   submitAnswer: () => void
   className?: string
 }
 
 function MainPanel({gameState, answer, submitAnswer, onAnswerChange, className}: MainPanelProps) {
-  /* TODO
-  Make the input box bigger to support paragraph response
-  */
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>
@@ -117,7 +114,7 @@ function MainPanel({gameState, answer, submitAnswer, onAnswerChange, className}:
             Prompt: {gameState.prompt}
           </div>
           <div className="flex border-[1px] w-full">
-            <input type="text" value={answer} onChange={onAnswerChange} className="w-full"></input>
+            <textarea value={answer} onInput={onAnswerChange} className="w-full resize-none"></textarea>
             <button onClick={submitAnswer} className={`border-[1px] border-${answer ? "success" : "danger"}`}>Submit</button>
           </div>
         </div>
