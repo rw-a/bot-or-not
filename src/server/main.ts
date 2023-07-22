@@ -7,7 +7,8 @@ import dotenv from "dotenv";
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
   RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties } from "./types";
 import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
-import { generateID, createUser, getPrompt, saveSession } from "./utility";
+import { createUser, getPrompt, saveSession } from "./utility";
+import { generateID } from "../utility";
 
 
 /* Setup Server */
@@ -129,7 +130,7 @@ io.on("connect", (socket) => {
     // Generate roomID until an unonccupied one is found
     let roomID: string;
     do {
-      roomID = generateID(6).toUpperCase();
+      roomID = generateID(5).toUpperCase();
     } while (DATABASE.hasOwnProperty(roomID));
 
     callback(roomID);

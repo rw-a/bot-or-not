@@ -7,7 +7,7 @@ import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError
 import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
-import { generateID, getRandomInt } from './utility';
+import { generateID, getRandomInt } from '../utility';
 
 
 function App() {
