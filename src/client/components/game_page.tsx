@@ -11,11 +11,12 @@ interface GamePageProps {
   answer: string
   vote: string
   onReady: () => void
+  onLeave: () => void
   onAnswerChange: ChangeEventHandler<HTMLInputElement>
   submitAnswer: () => void
 }
 
-export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, vote, onReady, onAnswerChange, submitAnswer }: GamePageProps) {
+export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, vote, onReady, onLeave, onAnswerChange, submitAnswer }: GamePageProps) {
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <TopBar 
@@ -25,7 +26,8 @@ export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, 
         minutes={minutes} 
         seconds={seconds} 
         onReady={onReady} 
-        className="flex justify-evenly"
+        onLeave={onLeave}
+        className="flex justify-between"
       />
       <div className="flex">
         <SidePanel gameState={gameState} className="basis-1/4"/>
@@ -48,20 +50,21 @@ interface TopBarProps {
   minutes: number
   seconds: number
   onReady: () => void
+  onLeave: () => void
   className?: string
 }
 
-function TopBar({gameState, roomID, userID, minutes, seconds, onReady, className}: TopBarProps) {
+function TopBar({gameState, roomID, userID, minutes, seconds, onReady, onLeave, className}: TopBarProps) {
   /* TODO
-  Add button to leave room
   Will need to add property in room data that tracks whether user is active or not (also update disconnected sessions to reflect this)
-  Ready button should change based on user's ready state
+  Ready button should change color based on user's ready state
   */
   const userReady = gameState.users[userID].ready;
 
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>
+        <Button onClick={onLeave}>Leave</Button>
         <Button onClick={onReady}>{(userReady) ? "Unready" : "Ready"}</Button>
         <p>Room Code: <span className="font-mono">{roomID}</span></p>
       </> : <>

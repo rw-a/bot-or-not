@@ -14,6 +14,7 @@ function App() {
   const sessionID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
   const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState({} as LoginError);
 
@@ -129,6 +130,15 @@ function App() {
     socket.emit("toggleReady");
   }
 
+  function onLeave() {
+    /* TODO
+    Currently client side only
+    Needs to do something on the server side too
+    */
+    localStorage.removeItem("sessionID");
+    setIsAuthenticated(false);
+  }
+
   function onTimerDone() {
     if (gameState.gamePhase === GamePhases.Writing) {
       // Automatically submit the player's answer
@@ -179,6 +189,7 @@ function App() {
         answer={answer}
         vote={vote}
         onReady={onReady} 
+        onLeave={onLeave} 
         onAnswerChange={onAnswerChange} 
         submitAnswer={submitAnswer}
       ></GamePage>
