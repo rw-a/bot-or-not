@@ -1,6 +1,6 @@
 export function generateID(len?: number) {
   let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZ';
   for (let i = 0; i < (len || 40); i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
