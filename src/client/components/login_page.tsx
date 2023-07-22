@@ -65,7 +65,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
             required
             value={roomID}
             onChange={handleRoomIDChange}
-            verify={Boolean(loginError) || triedJoin}
+            verify={Boolean(loginError.errorMessage) || triedJoin}
             errorText={(loginError.errorType === "room") ? loginError.errorMessage : ""}
           ></TextInput>
           <Button onClick={handleJoin}>Join Room</Button>
