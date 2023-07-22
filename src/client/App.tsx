@@ -3,7 +3,7 @@ import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
 import './App.css'
-import { ServerToClientEvents, GameState, GamePhases } from '../server/types';
+import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError } from '../server/types';
 import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
@@ -14,7 +14,7 @@ function App() {
   const userID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
   const [roomID, setRoomID] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState({} as LoginError);
 
   const [gameState, setGameState] = useState({} as GameState);
 
@@ -60,8 +60,12 @@ function App() {
       setIsAuthenticated(false);
     }
 
-    function onLoginError(errorMessage: string) {
-      setLoginError(errorMessage);
+    function onLoginError(errorType: LoginErrorType, errorMessage: string) {
+      const loginError: LoginError = {
+        errorType, 
+        errorMessage
+      }
+      setLoginError(loginError);
     }
 
     function onLoginSuccess() {

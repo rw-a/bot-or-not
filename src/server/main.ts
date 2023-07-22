@@ -138,7 +138,7 @@ io.on("connect", (socket) => {
   socket.on("createRoom", (roomID: string, userID: string, username: string) => {
     if (DATABASE.hasOwnProperty(roomID)) {
       // This shouldn't happen since room code is checked on generation
-      socket.emit("loginError", "Room already exists.");
+      socket.emit("loginError", "room", "Room already exists.");
       return;
     } else {
       // Create room with initial game state
@@ -160,19 +160,19 @@ io.on("connect", (socket) => {
 
   socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
     if (!DATABASE.hasOwnProperty(roomID)) {
-      socket.emit("loginError", "Room doesn't exist.");
+      socket.emit("loginError", "room", "Room doesn't exist.");
       return;
     }
 
     if (DATABASE[roomID].gamePhase !== GamePhases.Lobby) {
-      socket.emit("loginError", "This room has already started.");
+      socket.emit("loginError", "room", "This room has already started.");
       return;
     }
 
     username = username.trim();
 
     if (userAlreadyExists(roomID, username)) {
-      socket.emit("loginError", "Username already taken.");
+      socket.emit("loginError", "username", "Username already taken.");
       return;
     }
 

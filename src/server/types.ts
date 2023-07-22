@@ -1,10 +1,11 @@
+/* Socket Events */
 export interface ServerToClientEvents {
   // Built-in events
   disconnect: () => void
   connect_error: (error: Error) => void
 
   // Custom events
-  loginError: (errorMessage: string) => void
+  loginError: (errorType: LoginErrorType, errorMessage: string) => void
   loginSuccess: () => void
   syncGameState: (gameState: GameState) => void
 }
@@ -26,9 +27,16 @@ export interface SocketData {
 
 }
 
+/* General */
 export interface SessionProperties {
   userID: string
   roomID: string
+}
+
+export type LoginErrorType = "room" | "username";
+export interface LoginError {
+  errorType: LoginErrorType
+  errorMessage: string
 }
 
 /* Stored Server-side */

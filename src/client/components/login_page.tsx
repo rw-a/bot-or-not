@@ -1,10 +1,11 @@
 import { socket } from '../socket';
 import { useState } from 'react';
 import { Button, TextInput } from './components';
+import { LoginError } from '../../server/types';
 
 interface LoginPageProps {
   onLogin: (roomCode: string, newUsername: string, create: boolean) => void
-  loginError: string
+  loginError: LoginError
 }
 
 export function LoginPage({ onLogin, loginError }: LoginPageProps) {
@@ -54,6 +55,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
           placeholder='Enter your name...'
           onChange={handleUsernameChange}
           verify={triedLogin}
+          errorText={(loginError.errorType === "username") ? loginError.errorMessage : ""}
         ></TextInput>
       </div>
       <div className="flex justify-around items-center">
@@ -64,7 +66,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
             value={roomID}
             onChange={handleRoomIDChange}
             verify={Boolean(loginError) || triedJoin}
-            errorText={loginError}
+            errorText={(loginError.errorType === "room") ? loginError.errorMessage : ""}
           ></TextInput>
           <Button onClick={handleJoin}>Join Room</Button>
         </div>
