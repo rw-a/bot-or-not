@@ -161,7 +161,11 @@ function endGame(roomID: string) {
 
 async function prepNextResponse() {
   NEXT_PROMPT = getPrompt();
-  NEXT_RESPONSE = await llm("./src/server/llm/llama-cpp", "./src/server/llm/open_llama-ggml-q4_0.bin", `Q: ${NEXT_PROMPT} A:`, ["\n"]);
+  
+  const PROMPT_TEMPLATE = `Q: ${NEXT_PROMPT} A:`;
+  NEXT_RESPONSE = await llm("./src/server/llm/llama-cpp", "./src/server/llm/open_llama-ggml-q4_0.bin", PROMPT_TEMPLATE, ["\n"]);
+  NEXT_RESPONSE = NEXT_RESPONSE.slice(PROMPT_TEMPLATE.length);
+
   console.log(`\
   Next Prompt: ${NEXT_PROMPT}
   Next Response: ${NEXT_RESPONSE}`);
