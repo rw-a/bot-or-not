@@ -122,14 +122,7 @@ function MainPanel({gameState, answer, submittedAnswer, submitAnswer, onAnswerCh
       </> : (gameState.gamePhase === GamePhases.VotingResults) ? <>
         Voting Results
       </> : (gameState.gamePhase === GamePhases.Voting) ? <>
-        <div className="flex flex-wrap basis-full justify-evenly">
-          {Object.entries(gameState.users).map(([userID, user]) => 
-          <div key={userID}>
-            <p>User: {user.username}</p>
-            <p>Response: {user.answers[gameState.round]}</p>
-          </div>
-          )}
-        </div>
+       <MainPanelVoting gameState={gameState}></MainPanelVoting>
       </> : <>
         Game Done
       </>}
@@ -160,6 +153,27 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
         disabled={answerSaved}
         className={`border-[1px] border-${(answerSaved) ? "muted" : "success"} ${answerSaved ? "text-muted" : ""}`}
        >Submit</button>
+    </div>
+  </div>
+  );
+}
+
+interface MainPanelVoting {
+  gameState: GameState
+}
+
+function MainPanelVoting({gameState}: MainPanelVoting) {
+  return (
+    <div className="flex flex-wrap basis-full justify-evenly">
+    {Object.entries(gameState.users).map(([userID, user]) => 
+    <div key={userID}>
+      <p>User: {user.username}</p>
+      <p>Response: {user.answers[gameState.round]}</p>
+    </div>
+    )}
+    <div>
+      <p>User: LLM</p>
+      <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
     </div>
   </div>
   );
