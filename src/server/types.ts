@@ -14,7 +14,7 @@ export interface ClientToServerEvents {
   generateRoomID: (callback: (roomID: string) => void) => void
   createRoom: (roomID: string, userID: string, username: string) => void
   joinRoom: (roomID: string, userID: string, username: string) => void
-  restoreSession: (sessionID: string, callback: (sessionInfo: SessionInfo) => void) => void
+  restoreSession: (sessionID: string, callback: (sessionInfo?: SessionInfo) => void) => void
   toggleReady: () => void
   submitAnswer: (answer: string) => void
   submitVote: (votedUserID: string) => void

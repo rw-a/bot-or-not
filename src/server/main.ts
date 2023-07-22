@@ -36,6 +36,7 @@ io.engine.use(sessionMiddleware);
 
 const DATABASE: {[key:string]: RoomData} = {};
 const SESSIONS: {[key:string]: {userID: string, roomID: string}} = {};
+const ROOM_SESSIONS: {[key: string]: string[]}= {};
 
 
 /* Helper Functions */
@@ -125,6 +126,12 @@ function startVotingPhase(roomID: string) {
 function endGame(roomID: string) {
   DATABASE[roomID].gamePhase = GamePhases.End;
   syncGameState(roomID);
+
+  for (const sessionID of ROOM_SESSIONS[roomID]) {
+    delete SESSIONS[sessionID];
+  }
+  delete ROOM_SESSIONS[roomID];
+  delete DATABASE[roomID];
 }
 
 
@@ -160,6 +167,7 @@ io.on("connect", (socket) => {
     DATABASE[roomID].users = {[userID]: createUser(username)};
     saveSession(req, roomID, userID);
     SESSIONS[req.sessionID] = {roomID, userID};
+    ROOM_SESSIONS[roomID] = [req.sessionID];
 
     socket.join(roomID);
     syncGameState(roomID);
@@ -187,17 +195,21 @@ io.on("connect", (socket) => {
     DATABASE[roomID].users[userID] = createUser(username);
     saveSession(req, roomID, userID);
     SESSIONS[req.sessionID] = {roomID, userID};
+    ROOM_SESSIONS[roomID].push(req.sessionID);
 
     socket.join(roomID);
     syncGameState(roomID);
     socket.emit("loginSuccess", req.sessionID);
   });
 
-  socket.on("restoreSession", (sessionID: string, callback: (sessionInfo: SessionInfo) => void) => {
-    if (!SESSIONS.hasOwnProperty(sessionID)) return;
+  socket.on("restoreSession", (sessionID: string, callback: (sessionInfo?: SessionInfo) => void) => {
+    if (!SESSIONS.hasOwnProperty(sessionID)) {
+      callback(undefined);
+      return;
+    }
 
-    const userID = SESSIONS[sessionID].userID;
     const roomID = SESSIONS[sessionID].roomID;
+    const userID = SESSIONS[sessionID].userID;
     const gameState = getGameState(roomID);
 
     socket.join(roomID);

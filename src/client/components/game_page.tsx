@@ -49,6 +49,9 @@ interface TopBarProps {
 }
 
 function TopBar({gameState, roomID, minutes, seconds, onReady, className}: TopBarProps) {
+  /* TODO
+  Add button to leave room
+  */
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>

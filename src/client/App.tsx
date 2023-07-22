@@ -115,11 +115,13 @@ function App() {
 
   async function restoreSession(storedSessionID: string) {
     const sessionInfo: SessionInfo = await socket.emitWithAck("restoreSession", storedSessionID);
-    sessionID.current = storedSessionID;
-    userID.current = sessionInfo.userID;
-    setRoomID(sessionInfo.roomID);
-    setIsAuthenticated(true);
-    setGameState(sessionInfo.gameState);
+    if (sessionInfo) {
+      sessionID.current = storedSessionID;
+      userID.current = sessionInfo.userID;
+      setRoomID(sessionInfo.roomID);
+      setIsAuthenticated(true);
+      setGameState(sessionInfo.gameState);
+    }
   }
 
   function onReady() {
