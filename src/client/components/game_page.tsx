@@ -5,6 +5,7 @@ import { GameState, GamePhases } from '../../server/types';
 interface GamePageProps {
   gameState: GameState
   roomID: string
+  userID: string
   minutes: number
   seconds: number
   answer: string
@@ -14,12 +15,13 @@ interface GamePageProps {
   submitAnswer: () => void
 }
 
-export function GamePage({ gameState, roomID, minutes, seconds, answer, vote, onReady, onAnswerChange, submitAnswer }: GamePageProps) {
+export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, vote, onReady, onAnswerChange, submitAnswer }: GamePageProps) {
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <TopBar 
         gameState={gameState} 
         roomID={roomID} 
+        userID={userID} 
         minutes={minutes} 
         seconds={seconds} 
         onReady={onReady} 
@@ -42,20 +44,25 @@ export function GamePage({ gameState, roomID, minutes, seconds, answer, vote, on
 interface TopBarProps {
   gameState: GameState
   roomID: string
+  userID: string
   minutes: number
   seconds: number
   onReady: () => void
   className?: string
 }
 
-function TopBar({gameState, roomID, minutes, seconds, onReady, className}: TopBarProps) {
+function TopBar({gameState, roomID, userID, minutes, seconds, onReady, className}: TopBarProps) {
   /* TODO
   Add button to leave room
+  Will need to add property in room data that tracks whether user is active or not (also update disconnected sessions to reflect this)
+  Ready button should change based on user's ready state
   */
+  const userReady = gameState.users[userID].ready;
+
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>
-        <Button onClick={onReady}>Ready</Button>
+        <Button onClick={onReady}>{(userReady) ? "Unready" : "Ready"}</Button>
         <p>Room Code: <span className="font-mono">{roomID}</span></p>
       </> : <>
         <p>Time Remaining: {minutes * 60 + seconds}</p>
@@ -73,8 +80,8 @@ interface SidePanelProps {
 function SidePanel({gameState, className}: SidePanelProps) {
   return (
     <div className={className}>
-        {Object.entries(gameState.users).map(([index, user]) =>
-          <div key={index} className={`border-[1px] border-${user.ready ? "success" : "danger"}`}>
+        {Object.entries(gameState.users).map(([userID, user]) =>
+          <div key={userID} className={`border-[1px] border-${user.ready ? "success" : "danger"}`}>
             <p>{user.username}</p>
             <p>Points: {user.points}</p>
           </div>
@@ -112,7 +119,13 @@ function MainPanel({gameState, answer, submitAnswer, onAnswerChange, className}:
           </div>
         </div>
       </> : (gameState.gamePhase === GamePhases.Voting) ? <>
-        Vote for player
+      <div className="flex basis-full justify-between">
+        {Object.entries(gameState.users).map(([userID, user]) => 
+        <div key={userID}>
+          <p>Response: {user.username}</p>
+        </div>
+        )}
+      </div>
       </> : <>
         Game Done
       </>)}
