@@ -1,15 +1,17 @@
+import { IncomingMessage } from "http";
 import express from "express";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import session, { Session } from "express-session";
 import dotenv from "dotenv";
 
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, 
-  RoomData, PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties, SessionInfo } from "./types";
-import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, RoomData, 
+  PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties, SessionInfo } from "./types";
+import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, 
+  PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
 import { createUser, getPrompt, saveSession } from "./utility";
 import { generateID } from "../utility";
-import { IncomingMessage } from "http";
+import llm from "./llm/llm";
 
 
 /* Setup Server */
@@ -38,6 +40,10 @@ const DATABASE: {[key:string]: RoomData} = {};
 const SESSIONS: {[key:string]: {userID: string, roomID: string}} = {};
 const ROOM_SESSIONS: {[key: string]: string[]}= {};
 
+// Always have a prompt and response cached, ready for next round, since LLM takes a while
+let NEXT_PROMPT = getPrompt();
+let NEXT_RESPONSE = "NO RESPONSE";
+prepNextResponse();
 
 /* Helper Functions */
 function userAlreadyExists(roomID: string, username: string) {
@@ -91,11 +97,14 @@ function allPlayersReady(roomID: string) {
 }
 
 function startWritingPhase(roomID: string) {
-  const roomData = DATABASE[roomID];
-  roomData.gamePhase = GamePhases.Writing;
-  roomData.timerStartTime = new Date();
-  roomData.prompt = getPrompt();
+  const room = DATABASE[roomID];
+  room.gamePhase = GamePhases.Writing;
+  room.timerStartTime = new Date();
+  room.prompt = NEXT_PROMPT;
+  room.llmResponse = NEXT_RESPONSE;
   syncGameState(roomID);
+
+  prepNextResponse();
 
   setTimeout(() => {    
     // Once writing phase finishes
@@ -134,6 +143,13 @@ function endGame(roomID: string) {
   delete DATABASE[roomID];
 }
 
+async function prepNextResponse() {
+  NEXT_PROMPT = getPrompt();
+  NEXT_RESPONSE = await llm("./src/server/llm/llama-cpp", "./src/server/llm/open_llama-ggml-q4_0.bin", `Q: ${NEXT_PROMPT} A:`, ["\n"]);
+  console.log(`\
+  Next Prompt: ${NEXT_PROMPT}
+  Next Response: ${NEXT_RESPONSE}`);
+}
 
 /* Socket Handling */
 io.on("connect", (socket) => {

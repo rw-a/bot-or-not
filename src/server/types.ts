@@ -57,8 +57,9 @@ export enum GamePhases {
 export interface RoomData {
   gamePhase: GamePhases
   timerStartTime: Date   // WARNING: this gets converted into string form when sent over socket.io
-  prompt?: string
   round: number
+  prompt?: string
+  llmResponse?: string
   users: {
     [key: string]: UserData
   }
@@ -71,6 +72,11 @@ export interface UserData {
   answer?: string
   vote?: string
 }
+
+/* TODO
+Separate data into game phase to prevent data from leaking
+"Answer" should contain user info when voting but not writing
+*/
 
 /* Accessible client-side. A subset of the data stored server-side */
 export const PUBLIC_USER_DATA = ["username", "ready", "points"] as const;
