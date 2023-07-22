@@ -5,10 +5,10 @@ import ViteExpress from "vite-express";
 import session, { Session } from "express-session";
 import dotenv from "dotenv";
 
-import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, RoomData, 
-  PUBLIC_USER_DATA, GameState, PublicUserData, UserData, GamePhases, SessionProperties, SessionInfo } from "./types";
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, GamePhases, 
+  SessionProperties, SessionInfo, RoundData, RoomID, RoomData, SessionID, UserID } from "./types";
 import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, 
-  PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME } from "../config";
+  PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME, POINTS_PER_CORRECT_GUESS } from "../config";
 import { createUser, getPrompt, saveSession } from "./utility";
 import { generateID } from "../utility";
 import llm from "./llm/llm";
@@ -36,9 +36,9 @@ const sessionMiddleware = session({
 });
 io.engine.use(sessionMiddleware);
 
-const DATABASE: {[key:string]: RoomData} = {};
-const SESSIONS: {[key:string]: {userID: string, roomID: string}} = {};
-const ROOM_SESSIONS: {[key: string]: string[]}= {};
+const DATABASE: {[key: RoomID]: RoomData} = {};
+const SESSIONS: {[key: SessionID]: {userID: UserID, roomID: RoomID}} = {};
+const ROOM_SESSIONS: {[key: RoomID]: SessionID[]}= {};
 
 // Always have a prompt and response cached, ready for next round, since LLM takes a while
 let NEXT_PROMPT = getPrompt();
@@ -56,6 +56,7 @@ function userAlreadyExists(roomID: string, username: string) {
 }
 
 function getGameState(roomID: string) {
+  /*
   const gameState = {} as GameState;
 
   for (const [key, value] of Object.entries(DATABASE[roomID])) {
@@ -78,8 +79,9 @@ function getGameState(roomID: string) {
       gameState[key as keyof RoomData] = value;
     }
   }
+  */
 
-  return gameState;
+  return DATABASE[roomID];
 }
 
 function syncGameState(roomID: string) {
@@ -100,8 +102,11 @@ function startWritingPhase(roomID: string) {
   const room = DATABASE[roomID];
   room.gamePhase = GamePhases.Writing;
   room.timerStartTime = new Date();
-  room.prompt = NEXT_PROMPT;
-  room.llmResponse = NEXT_RESPONSE;
+  const round: RoundData = {
+    prompt: NEXT_PROMPT,
+    llmResponse: NEXT_RESPONSE
+  }
+  room.rounds[room.round] = round;
   syncGameState(roomID);
 
   prepNextResponse();
@@ -153,9 +158,9 @@ async function prepNextResponse() {
 
 /* Socket Handling */
 io.on("connect", (socket) => {
-  const req = socket.request as IncomingMessage & {sessionID: string};
+  const req = socket.request as IncomingMessage & {sessionID: SessionID};
 
-  socket.on("generateRoomID", (callback: (roomID: string) => void) => {
+  socket.on("generateRoomID", (callback: (roomID: RoomID) => void) => {
     // Generate roomID until an unonccupied one is found
     let roomID: string;
     do {
@@ -165,7 +170,7 @@ io.on("connect", (socket) => {
     callback(roomID);
   });
 
-  socket.on("createRoom", (roomID: string, userID: string, username: string) => {
+  socket.on("createRoom", (roomID: RoomID, userID: UserID, username: string) => {
     if (DATABASE.hasOwnProperty(roomID)) {
       // This shouldn't happen since room code is checked on generation
       socket.emit("loginError", "room", "Room already exists.");
@@ -175,8 +180,10 @@ io.on("connect", (socket) => {
       DATABASE[roomID] = {
         gamePhase: GamePhases.Lobby, 
         timerStartTime: new Date(), 
+        round: 1,
+        rounds: {},
         users: {}, 
-        round: 1
+        llmUserID: generateID()
       };
     }
 
@@ -190,7 +197,7 @@ io.on("connect", (socket) => {
     socket.emit("loginSuccess", req.sessionID);
   });
 
-  socket.on("joinRoom", (roomID: string, userID: string, username: string) => {
+  socket.on("joinRoom", (roomID: RoomID, userID: UserID, username: string) => {
     if (!DATABASE.hasOwnProperty(roomID)) {
       socket.emit("loginError", "room", "Room doesn't exist.");
       return;
@@ -218,7 +225,7 @@ io.on("connect", (socket) => {
     socket.emit("loginSuccess", req.sessionID);
   });
 
-  socket.on("restoreSession", (sessionID: string, callback: (sessionInfo?: SessionInfo) => void) => {
+  socket.on("restoreSession", (sessionID: SessionID, callback: (sessionInfo?: SessionInfo) => void) => {
     if (!SESSIONS.hasOwnProperty(sessionID)) {
       callback(undefined);
       return;
@@ -260,28 +267,44 @@ io.on("connect", (socket) => {
   socket.on("submitAnswer", (answer: string) => {
     const roomID = req.session.roomID;
     const userID = req.session.userID;
-    const roomData = DATABASE[roomID];
+    const room = DATABASE[roomID];
 
-    if (roomData.gamePhase !== GamePhases.Writing) return;
-    roomData.users[userID].answer = answer;
+    if (room.gamePhase !== GamePhases.Writing) return;
+    room.users[userID].answers[room.round] = answer;
   }); 
 
-  socket.on("submitVote", (votedUserID: string) => {
+  socket.on("submitVote", (votedUserID: UserID) => {
     /* TODO
     this doesn't consider the fact that you can vote for the AI
     May need to change index into first 10 characters of userID
     */
     const roomID = req.session.roomID;
     const userID = req.session.userID;
-    const roomData = DATABASE[roomID];
+    const room = DATABASE[roomID];
 
-    if (roomData.gamePhase !== GamePhases.Voting) return;
-    if (!roomData.users.hasOwnProperty(votedUserID)) return;
-    if (votedUserID === userID) return;
+    if (room.gamePhase !== GamePhases.Voting) return;
 
-    const votedUser = roomData.users[votedUserID];
-    votedUser.points += POINTS_PER_VOTE;
-    roomData.users[userID].vote = votedUser.username;
+    // If voted for user
+    if (room.users.hasOwnProperty(votedUserID)) {
+      if (votedUserID === userID) return; // can't vote for yourself
+
+      const votedUser = room.users[votedUserID];
+      votedUser.points += POINTS_PER_VOTE;
+      room.users[userID].votes[room.round] = votedUserID;
+
+    // If voted for LLM
+    } else if (votedUserID === room.llmUserID) {
+      const user = room.users[userID];
+      user.points += POINTS_PER_CORRECT_GUESS;
+      room.users[userID].votes[room.round] = room.llmUserID;
+
+    // Voted for someone unknown
+    } else {
+      console.error(`User ${roomID} voted for someone unkwown: ${votedUserID}`);
+      return;
+    }
+
+    
   }); 
 
   socket.onAny((event, ...args) => {

@@ -155,6 +155,7 @@ function App() {
         // Randomly choose a player to vote for
         /* TODO
         Move to server side so that players who log out will still randomly vote
+        OR update how server handles logged out people
         */
         const userIDs = Object.keys(gameState.users).filter((id) => id !== userID);
         const randomUserID = userIDs[getRandomInt(0, userIDs.length)];

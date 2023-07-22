@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FormEventHandler } from 'react';
+import { FormEventHandler } from 'react';
 import { Button } from './components';
 import { GameState, GamePhases } from '../../server/types';
 
@@ -111,7 +111,7 @@ function MainPanel({gameState, answer, submitAnswer, onAnswerChange, className}:
       </> : (gameState.gamePhase === GamePhases.Writing ? <>
         <div className="flex flex-col basis-full justify-between">
           <div>
-            Prompt: {gameState.prompt}
+            Prompt: {gameState.rounds[gameState.round].prompt}
           </div>
           <div className="flex border-[1px] w-full">
             <textarea value={answer} onInput={onAnswerChange} className="w-full resize-none"></textarea>

@@ -12,12 +12,12 @@ export interface ServerToClientEvents {
   
 export interface ClientToServerEvents {
   generateRoomID: (callback: (roomID: string) => void) => void
-  createRoom: (roomID: string, userID: string, username: string) => void
-  joinRoom: (roomID: string, userID: string, username: string) => void
+  createRoom: (roomID: string, userID: UserID, username: string) => void
+  joinRoom: (roomID: string, userID: UserID, username: string) => void
   restoreSession: (sessionID: string, callback: (sessionInfo?: SessionInfo) => void) => void
   toggleReady: () => void
   submitAnswer: (answer: string) => void
-  submitVote: (votedUserID: string) => void
+  submitVote: (votedUserID: UserID) => void
 }
 
 export interface InterServerEvents {
@@ -30,13 +30,13 @@ export interface SocketData {
 
 /* General */
 export interface SessionProperties {
-  userID: string
   roomID: string
+  userID: UserID
 }
 
 export interface SessionInfo {
   roomID: string, 
-  userID: string, 
+  userID: UserID, 
   gameState: GameState
 }
 
@@ -46,7 +46,8 @@ export interface LoginError {
   errorMessage: string
 }
 
-/* Stored Server-side */
+/* TODO
+Add the VotingResults phase and update front end accordingly */
 export enum GamePhases {
   Lobby,
   Writing,
@@ -54,37 +55,40 @@ export enum GamePhases {
   End
 }
 
+export type SessionID = string;
+export type RoomID = string;
+export type UserID = string;
+export type UserName = string;
+export type RoundNumber = number;
+
 export interface RoomData {
   gamePhase: GamePhases
   timerStartTime: Date   // WARNING: this gets converted into string form when sent over socket.io
-  round: number
-  prompt?: string
-  llmResponse?: string
-  users: {
-    [key: string]: UserData
+  round: RoundNumber
+  rounds: {
+    [key: RoundNumber]: RoundData
   }
+  users: {
+    [key: UserID]: UserData
+  }
+  llmUserID: UserID
+}
+
+export interface RoundData {
+  prompt: string
+  llmResponse: string
 }
 
 export interface UserData {
-  username: string
+  username: UserName
   ready: boolean
   points: number
-  answer?: string
-  vote?: string
+  answers: {
+    [key: RoundNumber]: string
+  }
+  votes: {
+    [key: RoundNumber]: UserID
+  }
 }
 
-/* TODO
-Separate data into game phase to prevent data from leaking
-"Answer" should contain user info when voting but not writing
-*/
-
-/* Accessible client-side. A subset of the data stored server-side */
-export const PUBLIC_USER_DATA = ["username", "ready", "points"] as const;
-type PublicUserDataProperties = typeof PUBLIC_USER_DATA[number];
-export type PublicUserData = Pick<UserData, PublicUserDataProperties>; // UserID and some properties have been removed
-
-export interface GameState extends Omit<RoomData, 'users'> {
-  users: {
-    [key: string]: PublicUserData
-  }
-};
+export type GameState = RoomData;
