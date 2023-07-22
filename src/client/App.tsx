@@ -130,15 +130,21 @@ function App() {
 
   function onTimerDone() {
     if (gameState.gamePhase === GamePhases.Writing) {
-      if (!answer) {
-        // If the player hasn't submitted their answer yet.
+      // Automatically submit the player's answer
+      if (answer) {
         submitAnswer();
+      } else {
+        // If the player wrote nothing
+        socket.emit("submitAnswer", "NO RESPONSE");
       }
     } else if (gameState.gamePhase === GamePhases.Voting) {
       if (!vote) {
         // If the player didn't vote for anyone
 
         // Randomly choose a player to vote for
+        /* TODO
+        Move to server side so that players who log out will still randomly vote
+        */
         const userIDs = Object.keys(gameState.users).filter((id) => id !== userID.current);
         const randomUserID = userIDs[getRandomInt(0, userIDs.length)];
         socket.emit("submitVote", randomUserID);
