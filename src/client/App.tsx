@@ -12,7 +12,7 @@ import { generateID, getRandomInt } from '../utility';
 
 function App() {
   const sessionID = useRef("");  // This should be treated like an ephemeral private key. Anyone with this string can impersonate the user
-  const userID = useRef("");
+  const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState({} as LoginError);
@@ -103,13 +103,14 @@ function App() {
   }, []);
 
   function onLogin(newRoomID: string, newUsername: string, create: boolean) {
-    userID.current = generateID();
+    const newUserID = generateID();
+    setUserID(newUserID);
     setRoomID(newRoomID);
 
     if (create) {
-      socket.emit("createRoom", newRoomID, userID.current, newUsername);
+      socket.emit("createRoom", newRoomID, newUserID, newUsername);
     } else {
-      socket.emit("joinRoom", newRoomID, userID.current, newUsername);
+      socket.emit("joinRoom", newRoomID, newUserID, newUsername);
     }
   }
 
@@ -117,7 +118,7 @@ function App() {
     const sessionInfo: SessionInfo = await socket.emitWithAck("restoreSession", storedSessionID);
     if (sessionInfo) {
       sessionID.current = storedSessionID;
-      userID.current = sessionInfo.userID;
+      setUserID(sessionInfo.userID);
       setRoomID(sessionInfo.roomID);
       setIsAuthenticated(true);
       setGameState(sessionInfo.gameState);
@@ -145,7 +146,7 @@ function App() {
         /* TODO
         Move to server side so that players who log out will still randomly vote
         */
-        const userIDs = Object.keys(gameState.users).filter((id) => id !== userID.current);
+        const userIDs = Object.keys(gameState.users).filter((id) => id !== userID);
         const randomUserID = userIDs[getRandomInt(0, userIDs.length)];
         socket.emit("submitVote", randomUserID);
       }
@@ -172,6 +173,7 @@ function App() {
       <GamePage 
         gameState={gameState} 
         roomID={roomID} 
+        userID={userID}
         minutes={minutes}
         seconds={seconds}
         answer={answer}
