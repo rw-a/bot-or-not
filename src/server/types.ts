@@ -52,6 +52,7 @@ export enum GamePhases {
   Lobby,
   Writing,
   Voting,
+  VotingResults,
   End
 }
 

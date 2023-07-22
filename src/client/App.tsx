@@ -4,7 +4,7 @@ import { socket } from './socket';
 
 import './App.css'
 import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError, SessionInfo } from '../server/types';
-import { VOTING_PHASE_DURATION, WRITING_PHASE_DURATION } from '../config';
+import { PHASE_DURATIONS } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
 import { generateID, getRandomInt } from '../utility';
@@ -74,9 +74,13 @@ function App() {
 
       if (minutes * 60 + seconds === 0) {
         if (newGameState.gamePhase === GamePhases.Writing) {
-          restart(new Date(new Date(newGameState.timerStartTime).getTime() + WRITING_PHASE_DURATION * 1000));
+          restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.Writing] * 1000));
         } else if (newGameState.gamePhase === GamePhases.Voting) {
-          restart(new Date(new Date(newGameState.timerStartTime).getTime() + VOTING_PHASE_DURATION * 1000));
+          restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.Voting] * 1000));
+        } else if (newGameState.gamePhase === GamePhases.VotingResults) {
+          restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.VotingResults] * 1000));
+        } else {
+          console.error("Unkown phase:", newGameState.gamePhase);
         }
       }
     }
@@ -149,21 +153,6 @@ function App() {
         // If the player wrote nothing
         socket.emit("submitAnswer", "NO RESPONSE");
       }
-    } else if (gameState.gamePhase === GamePhases.Voting) {
-      if (!vote) {
-        // If the player didn't vote for anyone
-
-        // Randomly choose a player to vote for
-        /* TODO
-        Move to server side so that players who log out will still randomly vote
-        OR update how server handles logged out people
-        */
-        const userIDs = Object.keys(gameState.users).filter((id) => id !== userID);
-        const randomUserID = userIDs[getRandomInt(0, userIDs.length)];
-        socket.emit("submitVote", randomUserID);
-      }
-    } else {
-      console.error("Timer finished on unexpected game phase:", gameState.gamePhase);
     }
   }
 

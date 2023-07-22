@@ -7,8 +7,8 @@ import dotenv from "dotenv";
 
 import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData, GamePhases, 
   SessionProperties, SessionInfo, RoundData, RoomID, RoomData, SessionID, UserID } from "./types";
-import { WS_PORT, WRITING_PHASE_DURATION, VOTING_PHASE_DURATION, POINTS_PER_VOTE, 
-  PHASE_END_LEEWAY_DURATION, NUMBER_ROUNDS_PER_GAME, POINTS_PER_CORRECT_GUESS } from "../config";
+import { WS_PORT, PHASE_DURATIONS, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, 
+  NUMBER_ROUNDS_PER_GAME, POINTS_PER_CORRECT_GUESS } from "../config";
 import { createUser, getPrompt, saveSession } from "./utility";
 import { generateID } from "../utility";
 import llm from "./llm/llm";
@@ -114,7 +114,7 @@ function startWritingPhase(roomID: string) {
   setTimeout(() => {    
     // Once writing phase finishes
     startVotingPhase(roomID);
-  }, (WRITING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+  }, (PHASE_DURATIONS[GamePhases.Writing] + PHASE_END_LEEWAY_DURATION) * 1000);
 
   /* TODO
   Rather than adding a leeway, automatically move on once all users have sent their request
@@ -128,13 +128,24 @@ function startVotingPhase(roomID: string) {
   syncGameState(roomID);
 
   setTimeout(() => {
+    startVotingResultsPhase(roomID);
+  }, (PHASE_DURATIONS[GamePhases.Voting] + PHASE_END_LEEWAY_DURATION) * 1000);
+}
+
+function startVotingResultsPhase(roomID: RoomID) {
+  const room = DATABASE[roomID];
+  room.gamePhase = GamePhases.VotingResults;
+  room.timerStartTime = new Date();
+  syncGameState(roomID);
+
+  setTimeout(() => {
     if (room.round < NUMBER_ROUNDS_PER_GAME) {
       room.round += 1;
       startWritingPhase(roomID);
     } else {
       endGame(roomID);
     }
-  }, (VOTING_PHASE_DURATION + PHASE_END_LEEWAY_DURATION) * 1000);
+  }, (PHASE_DURATIONS[GamePhases.VotingResults] + PHASE_END_LEEWAY_DURATION) * 1000);
 }
 
 function endGame(roomID: string) {
