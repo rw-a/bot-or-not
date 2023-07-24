@@ -78,12 +78,16 @@ function TopBar({gameState, roomID, userID, minutes, seconds, onReady, onLeave, 
 
   return (
     <div className={className}>
-      {gameState.gamePhase === GamePhases.Lobby ? <>
+      {gameState.gamePhase === GamePhases.Lobby || gameState.gamePhase === GamePhases.End ? <>
         <Button onClick={onLeave}>Leave</Button>
+      </> : <>
+      <p>Time Remaining: {minutes * 60 + seconds}</p>
+      </>}
+
+      {gameState.gamePhase === GamePhases.Lobby ? <>
         <Button onClick={onReady}>{(userReady) ? "Unready" : "Ready"}</Button>
         <p>Room Code: <span className="font-mono">{roomID}</span></p>
       </> : <>
-        <p>Time Remaining: {minutes * 60 + seconds}</p>
         <p>{GAME_PHASE_NAMES[gameState.gamePhase]}</p>
         <p>Round: {gameState.round}</p>
       </>}
