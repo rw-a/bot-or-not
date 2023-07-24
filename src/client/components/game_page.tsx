@@ -1,17 +1,17 @@
 import { FormEventHandler } from 'react';
 import { Button } from './components';
-import { GameState, GamePhases, UserID } from '../../server/types';
+import { GameState, GamePhases, UserID, RoomID } from '../../server/types';
 import { GAME_PHASE_NAMES } from '../../config';
 
 interface GamePageProps {
   gameState: GameState
-  roomID: string
-  userID: string
+  roomID: RoomID
+  userID: UserID
   minutes: number
   seconds: number
   answer: string
   submittedAnswer: string
-  vote: string
+  vote: UserID
   onReady: () => void
   onLeave: () => void
   onAnswerChange: FormEventHandler<HTMLTextAreaElement>
@@ -38,6 +38,7 @@ export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, 
           gameState={gameState}
           answer={answer}
           submittedAnswer={submittedAnswer}
+          vote={vote}
           onAnswerChange={onAnswerChange}
           submitAnswer={submitAnswer}
           submitVote={submitVote}
@@ -102,6 +103,7 @@ function SidePanel({gameState, className}: SidePanelProps) {
 interface MainPanelProps {
   gameState: GameState
   answer: string
+  vote: UserID
   submittedAnswer: string
   onAnswerChange: FormEventHandler<HTMLTextAreaElement>
   submitAnswer: () => void
@@ -109,7 +111,7 @@ interface MainPanelProps {
   className?: string
 }
 
-function MainPanel({gameState, answer, submittedAnswer, onAnswerChange, submitAnswer, submitVote, className}: MainPanelProps) {
+function MainPanel({gameState, answer, submittedAnswer, vote, onAnswerChange, submitAnswer, submitVote, className}: MainPanelProps) {
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>
@@ -127,7 +129,11 @@ function MainPanel({gameState, answer, submittedAnswer, onAnswerChange, submitAn
       </> : (gameState.gamePhase === GamePhases.VotingResults) ? <>
         Voting Results
       </> : (gameState.gamePhase === GamePhases.Voting) ? <>
-       <MainPanelVoting gameState={gameState} submitVote={submitVote}></MainPanelVoting>
+       <MainPanelVoting 
+        gameState={gameState} 
+        vote={vote} 
+        submitVote={submitVote}
+       ></MainPanelVoting>
       </> : <>
         Game Done
       </>}
@@ -165,10 +171,11 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
 
 interface MainPanelVoting {
   gameState: GameState
+  vote: UserID
   submitVote: (userID: UserID) => void
 }
 
-function MainPanelVoting({gameState, submitVote}: MainPanelVoting) {
+function MainPanelVoting({gameState, vote, submitVote}: MainPanelVoting) {
   /* Maybe use grid instead */
   /* TODO
   Don't show your own response, OR do show but don't let you click on yourself
@@ -177,12 +184,12 @@ function MainPanelVoting({gameState, submitVote}: MainPanelVoting) {
   return (
     <div className="flex flex-wrap basis-full justify-evenly">
     {Object.entries(gameState.users).map(([userID, user]) => 
-    <div key={userID} className="cursor-pointer hover:bg-muted" onClick={() => {submitVote(userID)}}>
+    <div key={userID} className={"cursor-pointer hover:bg-muted" + (vote === userID ? " bg-muted": "")} onClick={() => {submitVote(userID)}}>
       <p>User: {user.username}</p>
       <p>Response: {user.answers[gameState.round]}</p>
     </div>
     )}
-    <div className="cursor-pointer hover:bg-muted" onClick={() => {submitVote(gameState.llmUserID)}}>
+    <div className={"cursor-pointer hover:bg-muted" + (vote === gameState.llmUserID ? " bg-muted": "")} onClick={() => {submitVote(gameState.llmUserID)}}>
       <p>User: LLM</p>
       <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
     </div>
