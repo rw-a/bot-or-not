@@ -134,7 +134,12 @@ function App() {
       setUserID(sessionInfo.userID);
       setRoomID(sessionInfo.roomID);
       setIsAuthenticated(true);
-      setGameState(sessionInfo.gameState);
+
+      const gameState = sessionInfo.gameState;
+      setGameState(gameState);
+      if (PHASE_DURATIONS.hasOwnProperty(gameState.gamePhase)) {
+        restart(new Date(new Date(gameState.timerStartTime).getTime() + PHASE_DURATIONS[gameState.gamePhase as 1|2|3] * 1000));
+      }
     }
   }
 
