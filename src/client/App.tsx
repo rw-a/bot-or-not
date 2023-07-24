@@ -86,8 +86,6 @@ function App() {
           setVote("");
           restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.VotingResults] * 1000));
 
-        } else {
-          console.error("Unkown phase:", newGameState.gamePhase);
         }
       }
     }
