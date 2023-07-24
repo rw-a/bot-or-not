@@ -14,3 +14,11 @@ export const PHASE_END_LEEWAY_DURATION = 3; // add a few seconds at the end of e
 
 export const POINTS_PER_VOTE = 100;     // for other people voting for your answer
 export const POINTS_PER_CORRECT_GUESS = 200;    // for guessing the correct answer
+
+export const GAME_PHASE_NAMES: {[property in GamePhases]: string} = {
+    [GamePhases.Lobby]: "Lobby",
+    [GamePhases.Writing]: "Writing Phase",
+    [GamePhases.Voting]: "Voting Phase",
+    [GamePhases.VotingResults]: "Voting Results",
+    [GamePhases.End]: "Game Done"
+}

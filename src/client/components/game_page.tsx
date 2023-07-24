@@ -1,6 +1,7 @@
 import { FormEventHandler } from 'react';
 import { Button } from './components';
 import { GameState, GamePhases } from '../../server/types';
+import { GAME_PHASE_NAMES } from '../../config';
 
 interface GamePageProps {
   gameState: GameState
@@ -71,6 +72,7 @@ function TopBar({gameState, roomID, userID, minutes, seconds, onReady, onLeave, 
         <p>Room Code: <span className="font-mono">{roomID}</span></p>
       </> : <>
         <p>Time Remaining: {minutes * 60 + seconds}</p>
+        <p>{GAME_PHASE_NAMES[gameState.gamePhase]}</p>
         <p>Round: {gameState.round}</p>
       </>}
     </div>
