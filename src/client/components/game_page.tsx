@@ -152,7 +152,7 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
         onClick={submitAnswer} 
         disabled={answerSaved}
         className={`border-[1px] border-${(answerSaved) ? "muted" : "success"} ${answerSaved ? "text-muted" : ""}`}
-       >Submit</button>
+       >{(submittedAnswer) ? "Resubmit" : "Submit"}</button>
     </div>
   </div>
   );
