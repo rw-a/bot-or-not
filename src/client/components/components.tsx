@@ -42,7 +42,7 @@ export function TextInput({value, onChange, placeholder, required, verify, error
 
 
 interface ButtonProps {
-  disabled: boolean
+  disabled?: boolean
   children: string
   onClick: MouseEventHandler<HTMLButtonElement>
   className?: string
