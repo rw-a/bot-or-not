@@ -12,14 +12,20 @@ interface GamePageProps {
   answer: string
   submittedAnswer: string
   vote: UserID
+  submittedVote: UserID
   onReady: () => void
   onLeave: () => void
   onAnswerChange: FormEventHandler<HTMLTextAreaElement>
   submitAnswer: () => void
-  submitVote: (userID: UserID) => void
+  onVoteChange: (userID: UserID) => void
+  submitVote: () => void
 }
 
-export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, submittedAnswer, vote, onReady, onLeave, onAnswerChange, submitAnswer, submitVote }: GamePageProps) {
+export function GamePage({ 
+  gameState, roomID, userID, minutes, seconds, 
+  answer, submittedAnswer, vote, submittedVote, 
+  onReady, onLeave, onAnswerChange, submitAnswer, onVoteChange, submitVote }: GamePageProps) {
+
   return (
     <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
       <TopBar 
@@ -39,8 +45,10 @@ export function GamePage({ gameState, roomID, userID, minutes, seconds, answer, 
           answer={answer}
           submittedAnswer={submittedAnswer}
           vote={vote}
+          submittedVote={submittedVote}
           onAnswerChange={onAnswerChange}
           submitAnswer={submitAnswer}
+          onVoteChange={onVoteChange}
           submitVote={submitVote}
           className="basis-3/4 border flex"
         />
@@ -103,15 +111,20 @@ function SidePanel({gameState, className}: SidePanelProps) {
 interface MainPanelProps {
   gameState: GameState
   answer: string
-  vote: UserID
   submittedAnswer: string
+  vote: UserID
+  submittedVote: UserID
   onAnswerChange: FormEventHandler<HTMLTextAreaElement>
   submitAnswer: () => void
-  submitVote: (userID: UserID) => void
+  onVoteChange: (userID: UserID) => void
+  submitVote: () => void
   className?: string
 }
 
-function MainPanel({gameState, answer, submittedAnswer, vote, onAnswerChange, submitAnswer, submitVote, className}: MainPanelProps) {
+function MainPanel({
+  gameState, answer, submittedAnswer, vote, submittedVote, 
+  onAnswerChange, submitAnswer, onVoteChange, submitVote, className}: MainPanelProps) {
+
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby ? <>
@@ -132,6 +145,8 @@ function MainPanel({gameState, answer, submittedAnswer, vote, onAnswerChange, su
        <MainPanelVoting 
         gameState={gameState} 
         vote={vote} 
+        submittedVote={submittedVote}
+        onVoteChange={onVoteChange}
         submitVote={submitVote}
        ></MainPanelVoting>
       </> : <>
@@ -172,27 +187,32 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
 interface MainPanelVoting {
   gameState: GameState
   vote: UserID
-  submitVote: (userID: UserID) => void
+  submittedVote: UserID
+  onVoteChange: (userID: UserID) => void
+  submitVote: () => void
 }
 
-function MainPanelVoting({gameState, vote, submitVote}: MainPanelVoting) {
+function MainPanelVoting({gameState, vote, submittedVote, onVoteChange, submitVote}: MainPanelVoting) {
   /* Maybe use grid instead */
   /* TODO
   Don't show your own response, OR do show but don't let you click on yourself
-  Show who you voted for and prevent further voting OR add vote submit button
+  Show who you voted for and prevent further voting
   */
   return (
-    <div className="flex flex-wrap basis-full justify-evenly">
-    {Object.entries(gameState.users).map(([userID, user]) => 
-    <div key={userID} className={"cursor-pointer hover:bg-muted" + (vote === userID ? " bg-muted": "")} onClick={() => {submitVote(userID)}}>
-      <p>User: {user.username}</p>
-      <p>Response: {user.answers[gameState.round]}</p>
+  <div className="basis-full">
+    <div className="flex flex-wrap justify-evenly">
+      {Object.entries(gameState.users).map(([userID, user]) => 
+      <div key={userID} className={"cursor-pointer hover:bg-muted" + (vote === userID ? " bg-muted": "")} onClick={() => {onVoteChange(userID)}}>
+        <p>User: {user.username}</p>
+        <p>Response: {user.answers[gameState.round]}</p>
+      </div>
+      )}
+      <div className={"cursor-pointer hover:bg-muted" + (vote === gameState.llmUserID ? " bg-muted": "")} onClick={() => {onVoteChange(gameState.llmUserID)}}>
+        <p>User: LLM</p>
+        <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
+      </div>
     </div>
-    )}
-    <div className={"cursor-pointer hover:bg-muted" + (vote === gameState.llmUserID ? " bg-muted": "")} onClick={() => {submitVote(gameState.llmUserID)}}>
-      <p>User: LLM</p>
-      <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
-    </div>
+    <Button onClick={submitVote}>Submit Vote</Button>
   </div>
   );
 }

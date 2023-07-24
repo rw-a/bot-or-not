@@ -24,6 +24,7 @@ function App() {
   const [submittedAnswer, setSubmittedAnswer] = useState("");
 
   const [vote, setVote] = useState("");
+  const [submittedVote, setSubmittedVote] = useState("");
 
   const {
     seconds,
@@ -151,6 +152,7 @@ function App() {
     setAnswer("");
     setSubmittedAnswer("");
     setVote("");
+    setSubmittedVote("");
   }
 
   function onReady() {
@@ -183,10 +185,14 @@ function App() {
     socket.emit("submitAnswer", answer);
   }
 
-  function submitVote(votedUserID: UserID) {
+  function onVoteChange(votedUserID: UserID) {
     if (votedUserID === userID) return; // can't vote for yourself
     setVote(votedUserID);
-    socket.emit("submitVote", votedUserID);
+  }
+
+  function submitVote() {
+    setSubmittedVote(vote);
+    socket.emit("submitVote", vote);
   }
 
   return (
@@ -205,10 +211,12 @@ function App() {
         answer={answer}
         submittedAnswer={submittedAnswer}
         vote={vote}
+        submittedVote={submittedVote}
         onReady={onReady} 
         onLeave={onLeave} 
         onAnswerChange={onAnswerChange} 
         submitAnswer={submitAnswer}
+        onVoteChange={onVoteChange}
         submitVote={submitVote}
       ></GamePage>
       }
