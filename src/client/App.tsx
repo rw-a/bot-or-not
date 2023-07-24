@@ -7,7 +7,7 @@ import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError
 import { PHASE_DURATIONS } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
-import { generateID, getRandomInt } from '../utility';
+import { generateID } from '../utility';
 
 
 function App() {
@@ -138,6 +138,18 @@ function App() {
     }
   }
 
+  function resetState() {
+    sessionID.current = "";
+    setUserID("");
+    setRoomID("");
+    setIsAuthenticated(false);
+    setLoginError({} as LoginError);
+    setGameState({} as GameState);
+    setAnswer("");
+    setSubmittedAnswer("");
+    setVote("");
+  }
+
   function onReady() {
     socket.emit("toggleReady");
   }
@@ -148,7 +160,7 @@ function App() {
     Needs to do something on the server side too
     */
     localStorage.removeItem("sessionID");
-    setIsAuthenticated(false);
+    resetState();
   }
 
   function onTimerDone() {
