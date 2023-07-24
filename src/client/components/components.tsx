@@ -42,19 +42,21 @@ export function TextInput({value, onChange, placeholder, required, verify, error
 
 
 interface ButtonProps {
+  disabled: boolean
   children: string
   onClick: MouseEventHandler<HTMLButtonElement>
   className?: string
 }
 
-export function Button({children, onClick, className}: ButtonProps) {
+export function Button({disabled, children, onClick, className}: ButtonProps) {
   return (
     <button
       title={children}
+      disabled={disabled}
       onClick={onClick}
       className={(className ?? "") + `
         px-5 py-2.5 text-sm leading-5 rounded-md font-semibold 
-        text-white bg-primary hover:bg-primary-dark
+        text-white bg-primary hover:bg-primary-dark disabled:bg-primary-light disabled:hover:bg-primary
       `}
     >{children}</button>
   );

@@ -206,7 +206,6 @@ interface MainPanelVoting {
 function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, onVoteChange, submitVote}: MainPanelVoting) {
   /* Maybe use grid instead */
   /* TODO
-  Prevent further voting
   */
   return (
   <div className="basis-full flex flex-col justify-between">
@@ -233,7 +232,7 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
       </div>
     </div>
     <div className="flex flex-row justify-center">
-      <Button onClick={submitVote}>Submit Vote</Button>
+      <Button disabled={submittedVote === vote && Boolean(submittedVote)} onClick={submitVote}>{submittedVote !== vote && submittedVote ? "Change Vote" : "Submit Vote"}</Button>
     </div>
   </div>
   );
