@@ -42,6 +42,7 @@ export function GamePage({
         <SidePanel gameState={gameState} className="basis-1/4"/>
         <MainPanel 
           gameState={gameState}
+          userID={userID}
           answer={answer}
           submittedAnswer={submittedAnswer}
           vote={vote}
@@ -110,6 +111,7 @@ function SidePanel({gameState, className}: SidePanelProps) {
 
 interface MainPanelProps {
   gameState: GameState
+  userID: UserID
   answer: string
   submittedAnswer: string
   vote: UserID
@@ -122,7 +124,7 @@ interface MainPanelProps {
 }
 
 function MainPanel({
-  gameState, answer, submittedAnswer, vote, submittedVote, 
+  gameState, userID, answer, submittedAnswer, vote, submittedVote, 
   onAnswerChange, submitAnswer, onVoteChange, submitVote, className}: MainPanelProps) {
 
   return (
@@ -144,6 +146,7 @@ function MainPanel({
       </> : (gameState.gamePhase === GamePhases.Voting) ? <>
        <MainPanelVoting 
         gameState={gameState} 
+        userID={userID}
         vote={vote} 
         submittedVote={submittedVote}
         onVoteChange={onVoteChange}
@@ -186,27 +189,29 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
 
 interface MainPanelVoting {
   gameState: GameState
+  userID: UserID
   vote: UserID
   submittedVote: UserID
   onVoteChange: (userID: UserID) => void
   submitVote: () => void
 }
 
-function MainPanelVoting({gameState, vote, submittedVote, onVoteChange, submitVote}: MainPanelVoting) {
+function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, onVoteChange, submitVote}: MainPanelVoting) {
   /* Maybe use grid instead */
   /* TODO
-  Don't show your own response, OR do show but don't let you click on yourself
   Show who you voted for and prevent further voting
+  Change the background of the submittedVote person. Probably not the same as hover colour
   */
   return (
   <div className="basis-full">
     <div className="flex flex-wrap justify-evenly">
       {Object.entries(gameState.users).map(([userID, user]) => 
+      (thisUserID !== userID) ? 
       <div key={userID} className={"cursor-pointer hover:bg-muted" + (vote === userID ? " bg-muted": "")} onClick={() => {onVoteChange(userID)}}>
         <p>User: {user.username}</p>
         <p>Response: {user.answers[gameState.round]}</p>
       </div>
-      )}
+      : "")}
       <div className={"cursor-pointer hover:bg-muted" + (vote === gameState.llmUserID ? " bg-muted": "")} onClick={() => {onVoteChange(gameState.llmUserID)}}>
         <p>User: LLM</p>
         <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
