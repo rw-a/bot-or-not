@@ -111,14 +111,28 @@ function startWritingPhase(roomID: string) {
 
   prepNextResponse();
 
-  setTimeout(() => {    
-    // Once writing phase finishes
-    startVotingPhase(roomID);
-  }, (PHASE_DURATIONS[GamePhases.Writing] + PHASE_END_LEEWAY_DURATION) * 1000);
+  function allPlayersAnswered() {
+    for (const user of Object.values(room.users)) {
+      if (!user.answers[room.round]) return false;
+    }
+    return true;
+  }
 
-  /* TODO
-  Rather than adding a leeway, automatically move on once all users have sent their request
-  */
+  Promise.race([
+    new Promise((resolve) => {setTimeout(resolve, PHASE_DURATIONS[GamePhases.Writing] * 1000);}),
+    new Promise<void>((resolve) => {
+      /* TODO Maybe
+      Change to event listener rather than polling (use roomID as event name)
+      */
+      setInterval(() => {
+        if (allPlayersAnswered()) {
+          resolve();
+        }
+      }, 100);
+    })
+  ]).then(() => {
+    startVotingPhase(roomID);
+  });
 }
 
 function startVotingPhase(roomID: string) {
@@ -127,9 +141,28 @@ function startVotingPhase(roomID: string) {
   room.timerStartTime = new Date();
   syncGameState(roomID);
 
-  setTimeout(() => {
+  function allPlayersVoted() {
+    for (const user of Object.values(room.users)) {
+      if (!user.votes[room.round]) return false;
+    }
+    return true;
+  }
+
+  Promise.race([
+    new Promise((resolve) => {setTimeout(resolve, PHASE_DURATIONS[GamePhases.Voting] * 1000);}),
+    new Promise<void>((resolve) => {
+      /* TODO Maybe
+      Change to event listener rather than polling (use roomID as event name)
+      */
+      setInterval(() => {
+        if (allPlayersVoted()) {
+          resolve();
+        }
+      }, 100);
+    })
+  ]).then(() => {
     startVotingResultsPhase(roomID);
-  }, (PHASE_DURATIONS[GamePhases.Voting] + PHASE_END_LEEWAY_DURATION) * 1000);
+  });
 }
 
 function startVotingResultsPhase(roomID: RoomID) {
@@ -145,7 +178,7 @@ function startVotingResultsPhase(roomID: RoomID) {
     } else {
       endGame(roomID);
     }
-  }, (PHASE_DURATIONS[GamePhases.VotingResults] + PHASE_END_LEEWAY_DURATION) * 1000);
+  }, PHASE_DURATIONS[GamePhases.VotingResults] * 1000);
 }
 
 function endGame(roomID: string) {
