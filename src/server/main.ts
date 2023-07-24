@@ -290,8 +290,7 @@ io.on("connect", (socket) => {
 
   socket.on("submitVote", (votedUserID: UserID) => {
     /* TODO
-    this doesn't consider the fact that you can vote for the AI
-    May need to change index into first 10 characters of userID
+    Handle what happens if a person doesn't vote
     */
     const roomID = req.session.roomID;
     const userID = req.session.userID;
@@ -321,6 +320,15 @@ io.on("connect", (socket) => {
 
     
   }); 
+
+  socket.on("leaveRoom", () => {
+    const roomID = req.session.roomID;
+    const userID = req.session.userID;
+    const sessionID = req.sessionID;
+
+    delete SESSIONS[sessionID];
+    delete DATABASE[roomID].users[userID];
+  });
 
   socket.onAny((event, ...args) => {
     console.log(event, args);

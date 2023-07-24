@@ -155,10 +155,6 @@ function App() {
   }
 
   function onLeave() {
-    /* TODO
-    Currently client side only
-    Needs to do something on the server side too
-    */
     localStorage.removeItem("sessionID");
     resetState();
   }
