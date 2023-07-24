@@ -21,8 +21,9 @@ function App() {
   const [gameState, setGameState] = useState({} as GameState);
 
   const [answer, setAnswer] = useState("");
-  const [vote, setVote] = useState("");   // the index of the user which the player votes for (note for future: index may be unreliable)
   const [submittedAnswer, setSubmittedAnswer] = useState("");
+
+  const [vote, setVote] = useState("");
 
   const {
     seconds,
@@ -75,10 +76,16 @@ function App() {
       if (minutes * 60 + seconds === 0) {
         if (newGameState.gamePhase === GamePhases.Writing) {
           restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.Writing] * 1000));
+
         } else if (newGameState.gamePhase === GamePhases.Voting) {
+          setAnswer("");
+          setSubmittedAnswer("");
           restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.Voting] * 1000));
+
         } else if (newGameState.gamePhase === GamePhases.VotingResults) {
+          setVote("");
           restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.VotingResults] * 1000));
+
         } else {
           console.error("Unkown phase:", newGameState.gamePhase);
         }
