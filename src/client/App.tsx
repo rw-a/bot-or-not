@@ -85,6 +85,7 @@ function App() {
 
         } else if (newGameState.gamePhase === GamePhases.VotingResults) {
           setVote("");
+          setSubmittedVote("");
           restart(new Date(new Date(newGameState.timerStartTime).getTime() + PHASE_DURATIONS[GamePhases.VotingResults] * 1000));
 
         }

@@ -204,19 +204,27 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
   /* Maybe use grid instead */
   /* TODO
   Show who you voted for and prevent further voting
-  Change the background of the submittedVote person. Probably not the same as hover colour
   */
   return (
   <div className="basis-full">
     <div className="flex flex-wrap justify-evenly">
       {Object.entries(gameState.users).map(([userID, user]) => 
       (thisUserID !== userID) ? 
-      <div key={userID} className={"cursor-pointer hover:bg-muted" + (vote === userID ? " bg-muted": "")} onClick={() => {onVoteChange(userID)}}>
+      <div 
+      key={userID} 
+      className={"cursor-pointer hover:bg-muted border-[1px]" 
+      + (submittedVote === userID ? " border-success" : "") 
+      + (vote === userID ? " bg-muted": "")} 
+      onClick={() => {onVoteChange(userID)}}>
         <p>User: {user.username}</p>
         <p>Response: {user.answers[gameState.round]}</p>
       </div>
       : "")}
-      <div className={"cursor-pointer hover:bg-muted" + (vote === gameState.llmUserID ? " bg-muted": "")} onClick={() => {onVoteChange(gameState.llmUserID)}}>
+      <div 
+      className={"cursor-pointer hover:bg-muted border-[1px]" 
+      + (submittedVote === gameState.llmUserID ? " border-success" : "") 
+      + (vote === gameState.llmUserID ? " bg-muted": "")} 
+      onClick={() => {onVoteChange(gameState.llmUserID)}}>
         <p>User: LLM</p>
         <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
       </div>
