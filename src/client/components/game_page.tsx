@@ -101,10 +101,13 @@ interface SidePanelProps {
 }
 
 function SidePanel({gameState, className}: SidePanelProps) {
+  /* TODO
+  Only show ready state in Lobby Phase
+  */
   return (
     <div className={className}>
         {Object.entries(gameState.users).map(([userID, user]) =>
-          <div key={userID} className={`border-[1px] border-${user.ready ? "success" : "danger"}`}>
+          <div key={userID} className={`border-[1px] ${user.ready ? "border-success" : "border-danger"}`}>
             <p>{user.username}</p>
             <p>Points: {user.points}</p>
           </div>
@@ -203,11 +206,11 @@ interface MainPanelVoting {
 function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, onVoteChange, submitVote}: MainPanelVoting) {
   /* Maybe use grid instead */
   /* TODO
-  Show who you voted for and prevent further voting
+  Prevent further voting
   */
   return (
-  <div className="basis-full">
-    <div className="flex flex-wrap justify-evenly">
+  <div className="basis-full flex flex-col justify-between">
+    <div className="flex flex-row flex-wrap justify-around">
       {Object.entries(gameState.users).map(([userID, user]) => 
       (thisUserID !== userID) ? 
       <div 
@@ -229,7 +232,9 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
         <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
       </div>
     </div>
-    <Button onClick={submitVote}>Submit Vote</Button>
+    <div className="flex flex-row justify-center">
+      <Button onClick={submitVote}>Submit Vote</Button>
+    </div>
   </div>
   );
 }
