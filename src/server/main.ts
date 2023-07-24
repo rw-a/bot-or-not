@@ -331,6 +331,10 @@ io.on("connect", (socket) => {
 
     if (room.gamePhase !== GamePhases.Voting) return;
 
+    /* TODO
+    Only evaluate points AFTER round ends, not on each vote (to prevent hacking)
+    */
+
     // If voted for user
     if (room.users.hasOwnProperty(votedUserID)) {
       if (votedUserID === userID) return; // can't vote for yourself

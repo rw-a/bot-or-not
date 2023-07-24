@@ -3,7 +3,7 @@ import { useTimer } from "react-timer-hook";
 import { socket } from './socket';
 
 import './App.css'
-import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError, SessionInfo } from '../server/types';
+import { ServerToClientEvents, GameState, GamePhases, LoginErrorType, LoginError, SessionInfo, UserID } from '../server/types';
 import { PHASE_DURATIONS } from '../config';
 import { LoginPage } from "./components/login_page";
 import { GamePage } from './components/game_page';
@@ -185,6 +185,12 @@ function App() {
     socket.emit("submitAnswer", answer);
   }
 
+  function submitVote(votedUserID: UserID) {
+    if (votedUserID === userID) return; // can't vote for yourself
+    setVote(votedUserID);
+    socket.emit("submitVote", votedUserID);
+  }
+
   return (
     <div className="container mx-auto px-4">
       {(!isAuthenticated) ? 
@@ -205,6 +211,7 @@ function App() {
         onLeave={onLeave} 
         onAnswerChange={onAnswerChange} 
         submitAnswer={submitAnswer}
+        submitVote={submitVote}
       ></GamePage>
       }
     </div>
