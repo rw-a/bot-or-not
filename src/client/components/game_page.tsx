@@ -1,6 +1,6 @@
 import { FormEventHandler } from 'react';
 import { Button } from './components';
-import { GameState, GamePhases, UserID, RoomID } from '../../server/types';
+import { GameState, GamePhases, UserID, RoomID, UserData } from '../../server/types';
 import { GAME_PHASE_NAMES, LLM_INGAME_NAME, POINTS_PER_CORRECT_GUESS, POINTS_PER_VOTE } from '../../config';
 
 interface GamePageProps {
@@ -160,7 +160,7 @@ function MainPanel({
         submitVote={submitVote}
        ></MainPanelVoting>
       </> : <>
-        Game Done
+        <MainPanelGameDone gameState={gameState}></MainPanelGameDone>
       </>}
     </div>
   );
@@ -273,6 +273,34 @@ function MainPanelVotingResults({gameState}: MainPanelVotingResults) {
   return (
     <div className="flex flex-col">
       {...votingResults}
+    </div>
+  );
+}
+
+interface MainPanelGameDone {
+  gameState: GameState
+}
+
+function MainPanelGameDone({gameState}: MainPanelGameDone) {
+  /* TODO
+  Create a top 3 winners. Currently only person(s) with top score wins.
+  */
+
+  // Finds the person with the highest score OR persons if tied
+  let winners: UserData[] = [];
+  for (const user of Object.values(gameState.users)) {
+    if (winners.length === 0 || user.points === winners[0].points) {
+      winners.push(user);
+    } else if (user.points > winners[0].points) {
+      winners = [user];
+    }
+  }
+
+  return (
+    <div>
+      {winners.map((user) => 
+      <p key={user.username}>{user.username} won!</p>
+      )}
     </div>
   );
 }
