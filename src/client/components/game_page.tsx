@@ -1,7 +1,7 @@
 import { FormEventHandler } from 'react';
 import { Button } from './components';
 import { GameState, GamePhases, UserID, RoomID } from '../../server/types';
-import { GAME_PHASE_NAMES } from '../../config';
+import { GAME_PHASE_NAMES, LLM_INGAME_NAME, POINTS_PER_CORRECT_GUESS, POINTS_PER_VOTE } from '../../config';
 
 interface GamePageProps {
   gameState: GameState
@@ -149,7 +149,7 @@ function MainPanel({
           submitAnswer={submitAnswer}
         ></MainPanelWriting>
       </> : (gameState.gamePhase === GamePhases.VotingResults) ? <>
-        Voting Results
+        <MainPanelVotingResults gameState={gameState}></MainPanelVotingResults>
       </> : (gameState.gamePhase === GamePhases.Voting) ? <>
        <MainPanelVoting 
         gameState={gameState} 
@@ -235,5 +235,44 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
       <Button disabled={submittedVote === vote && Boolean(submittedVote)} onClick={submitVote}>{submittedVote !== vote && submittedVote ? "Change Vote" : "Submit Vote"}</Button>
     </div>
   </div>
+  );
+}
+
+interface MainPanelVotingResults {
+  gameState: GameState
+}
+
+function MainPanelVotingResults({gameState}: MainPanelVotingResults) {
+  const votingResults = [];
+  for (const [userID, user] of Object.entries(gameState.users)) {
+    const votedUserID = user.votes[gameState.round];
+    let votedUsername: string;
+    let pointsGainingUsername: string;
+    let numPointsGained: typeof POINTS_PER_CORRECT_GUESS | typeof POINTS_PER_VOTE;
+
+    if (votedUserID === gameState.llmUserID) {
+      votedUsername = LLM_INGAME_NAME;
+      pointsGainingUsername = user.username;
+      numPointsGained = POINTS_PER_CORRECT_GUESS;
+    } else {
+      const votedUserID = user.votes[gameState.round];
+      const votedUser = gameState.users[votedUserID]
+      votedUsername = votedUser.username;
+      pointsGainingUsername = votedUser.username;
+      numPointsGained = POINTS_PER_VOTE;
+    }
+
+    votingResults.push(
+      <div key={userID}>
+        <p><span className="font-medium">{user.username}</span> voted for <span className="font-medium">{votedUsername}.</span></p>
+        <p><span className="font-medium">{pointsGainingUsername}</span> gained <span className="font-medium">{numPointsGained}</span> points.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col">
+      {...votingResults}
+    </div>
   );
 }
