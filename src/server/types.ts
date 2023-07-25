@@ -18,6 +18,7 @@ export interface ClientToServerEvents {
   toggleReady: () => void
   submitAnswer: (answer: string) => void
   submitVote: (votedUserID: UserID) => void
+  leaveRoom: () => void
 }
 
 export interface InterServerEvents {
