@@ -119,7 +119,7 @@ function startWritingPhase(roomID: string) {
   }
 
   Promise.race([
-    new Promise((resolve) => {setTimeout(resolve, PHASE_DURATIONS[GamePhases.Writing] * 1000);}),
+    new Promise((resolve) => {setTimeout(resolve, (PHASE_DURATIONS[GamePhases.Writing] + PHASE_END_LEEWAY_DURATION) * 1000);}),
     new Promise<void>((resolve) => {
       /* TODO Maybe
       Change to event listener rather than polling (use roomID as event name)
@@ -149,7 +149,7 @@ function startVotingPhase(roomID: string) {
   }
 
   Promise.race([
-    new Promise((resolve) => {setTimeout(resolve, PHASE_DURATIONS[GamePhases.Voting] * 1000);}),
+    new Promise((resolve) => {setTimeout(resolve, (PHASE_DURATIONS[GamePhases.Voting] + PHASE_END_LEEWAY_DURATION) * 1000);}),
     new Promise<void>((resolve) => {
       /* TODO Maybe
       Change to event listener rather than polling (use roomID as event name)
