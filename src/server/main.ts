@@ -10,7 +10,7 @@ import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketDa
 import { WS_PORT, PHASE_DURATIONS, POINTS_PER_VOTE, PHASE_END_LEEWAY_DURATION, 
   NUMBER_ROUNDS_PER_GAME, POINTS_PER_CORRECT_GUESS } from "../config";
 import { createUser, getPrompt, saveSession } from "./utility";
-import { generateID } from "../utility";
+import { generateID, getRandomInt } from "../utility";
 import llm from "./llm/llm";
 
 
@@ -169,6 +169,33 @@ function startVotingResultsPhase(roomID: RoomID) {
   const room = DATABASE[roomID];
   room.gamePhase = GamePhases.VotingResults;
   room.timerStartTime = new Date();
+
+  // Calculate the point allocations from the voting phase
+  const userIDs = Object.keys(room.users);
+  for (const [userID, user] of Object.entries(room.users)) {
+    const votedUserID = user.votes[room.round]
+
+    // If player voted for LLM
+    if (votedUserID === room.llmUserID) {
+      user.points += POINTS_PER_CORRECT_GUESS;
+    
+    // If player voted for another player
+    } else if (userIDs.hasOwnProperty(votedUserID)) {
+      const votedUser = room.users[votedUserID];
+      votedUser.points += POINTS_PER_VOTE;
+    
+    // If player voted for someone invalid OR didn't vote at all
+    } else {
+      // Randomly vote for someone else
+      const otherUserIDs = userIDs.filter((ID) => ID !== userID); // all the userIDs excluding the current user's
+      const votedUserID = otherUserIDs[getRandomInt(0, otherUserIDs.length)];
+      const votedUser = room.users[votedUserID];
+      votedUser.points += POINTS_PER_VOTE;
+
+      user.votes[room.round] = votedUserID; // update the gameState as if they voted for that person
+    }
+  }
+
   syncGameState(roomID);
 
   setTimeout(() => {
@@ -198,6 +225,10 @@ async function prepNextResponse() {
   const PROMPT_TEMPLATE = `Q: ${NEXT_PROMPT} A:`;
   NEXT_RESPONSE = await llm("./src/server/llm/llama-cpp", "./src/server/llm/open_llama-ggml-q4_0.bin", PROMPT_TEMPLATE, ["\n"]);
   NEXT_RESPONSE = NEXT_RESPONSE.slice(PROMPT_TEMPLATE.length);
+
+  /* TODO
+  Fix random colon still showing up
+  */
 
   console.log(`\
   Next Prompt: ${NEXT_PROMPT}
@@ -322,31 +353,19 @@ io.on("connect", (socket) => {
   }); 
 
   socket.on("submitVote", (votedUserID: UserID) => {
-    /* TODO
-    Handle what happens if a person doesn't vote
-    */
     const roomID = req.session.roomID;
     const userID = req.session.userID;
     const room = DATABASE[roomID];
 
     if (room.gamePhase !== GamePhases.Voting) return;
 
-    /* TODO
-    Only evaluate points AFTER round ends, not on each vote (to prevent hacking)
-    */
-
-    // If voted for user
+    // If voted for another player
     if (room.users.hasOwnProperty(votedUserID)) {
       if (votedUserID === userID) return; // can't vote for yourself
-
-      const votedUser = room.users[votedUserID];
-      votedUser.points += POINTS_PER_VOTE;
       room.users[userID].votes[room.round] = votedUserID;
 
     // If voted for LLM
     } else if (votedUserID === room.llmUserID) {
-      const user = room.users[userID];
-      user.points += POINTS_PER_CORRECT_GUESS;
       room.users[userID].votes[room.round] = room.llmUserID;
 
     // Voted for someone unknown
