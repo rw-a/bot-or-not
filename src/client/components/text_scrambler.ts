@@ -13,7 +13,11 @@ interface ScrambleFrame {
     char?: string
 }
 
+const GRAYED_OUT_COLOR = "#757575";
 const CHARS = '!<>-_\\/[]{}—=+*^?#________';
+
+const ANIMATION_FRAME_DURATION = 40;    // Higher = slower
+const CHARACTER_SCRAMBLE_RATE = 0.28;   // How fast characters switch
 
 export default class TextScrambler {
     el: HTMLElement
@@ -41,8 +45,8 @@ export default class TextScrambler {
         for (let i = 0; i < length; i++) {
             const from = oldText[i] || '';
             const to = newText[i] || '';
-            const start = Math.floor(Math.random() * 40);
-            const end = start + Math.floor(Math.random() * 40);
+            const start = Math.floor(Math.random() * ANIMATION_FRAME_DURATION);
+            const end = start + Math.floor(Math.random() * ANIMATION_FRAME_DURATION);
             this.queue.push({ from, to, start, end });
         }
 
@@ -63,11 +67,11 @@ export default class TextScrambler {
                 complete++;
                 output += to;
             } else if (this.frame >= start) {
-                if (!char || Math.random() < 0.28) {
+                if (!char || Math.random() < CHARACTER_SCRAMBLE_RATE) {
                     char = this.randomChar();
                     this.queue[i].char = char;
                 }
-                output += `<span style="color: #757575">${char}</span>`;    // Grey it out
+                output += `<span style="color: ${GRAYED_OUT_COLOR}">${char}</span>`;
             } else {
                 output += from;
             }
