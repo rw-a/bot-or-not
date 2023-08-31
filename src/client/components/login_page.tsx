@@ -55,32 +55,33 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
   }
 
   return (
-    <div>
+    <div className="max-w-3xl mx-auto">
       <h1 ref={titleRef} className="text-2xl font-bold"></h1>
       <div>
         <p className="text-lg font-medium">Username</p>
         <TextInput
           required
           value={username}
-          placeholder='Enter your name...'
+          placeholder='Enter your username...'
           onChange={handleUsernameChange}
           verify={triedLogin}
           errorText={(loginError.errorType === "username") ? loginError.errorMessage : ""}
         ></TextInput>
       </div>
       <div className="flex justify-around items-center">
-        <div>
+        <div className="w-full">
           <p className="text-lg font-medium">Room Code</p>
           <TextInput
             required
             value={roomID}
+            placeholder='Enter a room code...'
             onChange={handleRoomIDChange}
             verify={Boolean(loginError.errorMessage) || triedJoin}
             errorText={(loginError.errorType === "room") ? loginError.errorMessage : ""}
           ></TextInput>
           <Button onClick={handleJoin}>Join Room</Button>
         </div>
-        <div>
+        <div className="w-full flex justify-center">
           <Button onClick={handleCreate}>Create Room</Button>
         </div>
       </div>
