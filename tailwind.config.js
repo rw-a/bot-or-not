@@ -16,7 +16,7 @@ module.exports = {
       semibold: '700',
       bold: '800',
       extrabold: '900',
-      black: '1000',
+      black: '900',
     },
     extend: {
       fontFamily: {
