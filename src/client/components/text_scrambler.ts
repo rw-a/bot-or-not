@@ -16,8 +16,9 @@ interface ScrambleFrame {
 const GRAYED_OUT_COLOR = "#757575";
 const CHARS = '!<>-_\\/[]{}—=+*^?#________';
 
-const ANIMATION_FRAME_DURATION = 40;    // Higher = slower
-const CHARACTER_SCRAMBLE_RATE = 0.28;   // How fast characters switch
+const ANIMATION_FRAME_DURATION = 40;    // How long it takes for the characters to reach the new word
+const CHARACTER_SCRAMBLE_RATE = 0.28;   // How fast characters switch randomly
+const MIN_FRAME_DURATION = 17;          // Frames must be at least this long (ms), i.e. fps cap (1000 / 60 = 17)
 
 export default class TextScrambler {
     el: HTMLElement
@@ -25,12 +26,16 @@ export default class TextScrambler {
     frame: number
     frameRequest: number
     resolve: (value?: unknown) => void
+    lastAnimationTime: DOMHighResTimeStamp | undefined
 
     constructor(el: HTMLElement) {
         this.el = el;
+
+        // State for each animation step
         this.queue = [];
         this.frame = 0;
         this.frameRequest = 0;
+        this.lastAnimationTime = undefined;
 
         this.update = this.update.bind(this);
     }
@@ -40,8 +45,8 @@ export default class TextScrambler {
         const length = Math.max(oldText.length, newText.length);
         const promise = new Promise(resolve => this.resolve = resolve);
 
+        // Create the list of character changes required
         this.queue = [];
-
         for (let i = 0; i < length; i++) {
             const from = oldText[i] || '';
             const to = newText[i] || '';
@@ -50,13 +55,31 @@ export default class TextScrambler {
             this.queue.push({ from, to, start, end });
         }
 
+        // Cancel any currently running animation
         cancelAnimationFrame(this.frameRequest);
+
+        // Start a new animation
         this.frame = 0;
-        this.update();
+        this.lastAnimationTime = undefined;
+        requestAnimationFrame(this.update);
+
         return promise;
     }
 
-    update() {
+    update(timestamp: DOMHighResTimeStamp) {
+        // Set when the animation has started
+        if (this.lastAnimationTime === undefined) {
+            this.lastAnimationTime = timestamp;
+        }
+
+        // Limit animation speed
+        if (timestamp - this.lastAnimationTime > MIN_FRAME_DURATION) {
+            this.lastAnimationTime = timestamp;
+        } else {
+            this.frameRequest = requestAnimationFrame(this.update);
+            return;
+        }
+
         let output = '';
         let complete = 0;
 
