@@ -9,7 +9,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inconsolata', ...defaultTheme.fontFamily.sans],
+        sans: ['Inconsolata variant0', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         primary: {
