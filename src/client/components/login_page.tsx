@@ -1,7 +1,8 @@
 import { socket } from '../socket';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, TextInput } from './components';
 import { LoginError } from '../../server/types';
+import TextScrambler from './text_scrambler';
 
 interface LoginPageProps {
   onLogin: (roomCode: string, newUsername: string, create: boolean) => void
@@ -15,6 +16,15 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
   // Tracks whether the user has tried to submit the login
   const [triedLogin, setTriedLogin] = useState(false);  // login = join OR create room
   const [triedJoin, setTriedJoin] = useState(false);
+
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      const textScrambler = new TextScrambler(titleRef.current);
+      textScrambler.setText("Bot Or Not");
+    }
+  }, []);
 
   function handleUsernameChange(event: React.FormEvent<HTMLInputElement>) {
     setUsername(event.currentTarget.value);
@@ -46,7 +56,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Title</h1>
+      <h1 ref={titleRef} className="text-2xl font-bold"></h1>
       <div>
         <p className="text-lg font-medium">Username</p>
         <TextInput
