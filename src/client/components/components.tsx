@@ -33,6 +33,7 @@ export function TextInput({value, onChange, placeholder, required, verify, error
           block w-full px-3 py-2 rounded-md text-sm shadow-sm 
           bg-white border placeholder-muted-dark
           focus:outline-none focus:ring-1 
+          dark:text-black
         `}
       ></input>
       <p hidden={!Boolean(invalid || errorText)} className="text-xs text-danger">{errorText || "Required"}</p>

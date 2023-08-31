@@ -197,7 +197,7 @@ function App() {
   }
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 dark:text-white">
       {(!isAuthenticated) ? 
       <LoginPage 
         onLogin={onLogin} 
