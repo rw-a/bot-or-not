@@ -108,9 +108,14 @@ function SidePanel({gameState, className}: SidePanelProps) {
   return (
     <div className={className}>
         {Object.entries(gameState.users).map(([userID, user]) =>
-          <div key={userID} className={`border-t-[1px] ${user.ready ? "border-success" : "border-danger"}`}>
-            <p>{user.username}</p>
-            <p>Points: {user.points}</p>
+          <div key={userID} className={"flex justify-between border-t-[1px] px-1"}>
+            <div>
+              <p>{user.username}</p>
+              <p>Points: {user.points}</p>
+            </div>
+            <div>
+              <p>{user.ready ? "Ready" : "Unready"}</p>
+            </div>
           </div>
         )}
     </div>
