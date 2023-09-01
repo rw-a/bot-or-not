@@ -3,6 +3,9 @@ import { Button } from './components';
 import { GameState, GamePhases, UserID, RoomID, UserData } from '../../server/types';
 import { GAME_PHASE_NAMES, LLM_INGAME_NAME, POINTS_PER_CORRECT_GUESS, POINTS_PER_VOTE } from '../../config';
 
+import IMG_READY from '../assets/ready.png';
+import IMG_UNREADY from '../assets/waiting.png';
+
 interface GamePageProps {
   gameState: GameState
   roomID: RoomID
@@ -108,13 +111,13 @@ function SidePanel({gameState, className}: SidePanelProps) {
   return (
     <div className={className}>
         {Object.entries(gameState.users).map(([userID, user]) =>
-          <div key={userID} className={"flex justify-between border-t-[1px] px-1"}>
+          <div key={userID} className={"flex justify-between items-center border-t-[1px] px-1"}>
             <div>
               <p>{user.username}</p>
               <p>Points: {user.points}</p>
             </div>
             <div>
-              <p>{user.ready ? "Ready" : "Unready"}</p>
+              <img src={user.ready ? IMG_READY: IMG_UNREADY} className="h-8 w-8"></img>
             </div>
           </div>
         )}
