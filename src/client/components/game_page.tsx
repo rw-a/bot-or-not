@@ -111,13 +111,13 @@ function SidePanel({gameState, className}: SidePanelProps) {
   return (
     <div className={className}>
         {Object.entries(gameState.users).map(([userID, user]) =>
-          <div key={userID} className={"flex justify-between items-center border-t-[1px] px-1"}>
+          <div key={userID} className={"flex justify-between items-center border-t-[1px] px-1 pr-2"}>
             <div>
               <p>{user.username}</p>
               <p>Points: {user.points}</p>
             </div>
             <div>
-              <img src={user.ready ? IMG_READY: IMG_UNREADY} className="h-8 w-8"></img>
+              <img src={user.ready ? IMG_READY: IMG_UNREADY} className="dark:invert h-7 w-7"></img>
             </div>
           </div>
         )}
