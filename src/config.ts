@@ -13,7 +13,7 @@ export const GAME_PHASE_NAMES: {[property in GamePhases]: string} = {
 
 // in seconds. will break if time is one hour or more (same with below)
 export const PHASE_DURATIONS = {
-    [GamePhases.Writing]: 60,
+    [GamePhases.Writing]: 6000,
     [GamePhases.Voting]: 30,
     [GamePhases.VotingResults]: 10,
 };
