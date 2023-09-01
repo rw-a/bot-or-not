@@ -27,7 +27,8 @@ export function GamePage({
   onReady, onLeave, onAnswerChange, submitAnswer, onVoteChange, submitVote }: GamePageProps) {
 
   return (
-    <div className="flex flex-col border-solid border-slate-700 border-[1px] rounded-md">
+    <div className="flex flex-col border-solid border-[1px] rounded-md
+      border-slate-700  dark:border-neutral-200">
       <TopBar 
         gameState={gameState} 
         roomID={roomID} 
@@ -51,7 +52,7 @@ export function GamePage({
           submitAnswer={submitAnswer}
           onVoteChange={onVoteChange}
           submitVote={submitVote}
-          className="basis-3/4 border flex"
+          className="basis-3/4 flex border-0 border-t-[1px] border-l-[1px]"
         />
       </div>
     </div>
@@ -107,7 +108,7 @@ function SidePanel({gameState, className}: SidePanelProps) {
   return (
     <div className={className}>
         {Object.entries(gameState.users).map(([userID, user]) =>
-          <div key={userID} className={`border-[1px] ${user.ready ? "border-success" : "border-danger"}`}>
+          <div key={userID} className={`border-t-[1px] ${user.ready ? "border-success" : "border-danger"}`}>
             <p>{user.username}</p>
             <p>Points: {user.points}</p>
           </div>
