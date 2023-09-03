@@ -116,9 +116,11 @@ function SidePanel({gameState, className}: SidePanelProps) {
               <p>{user.username}</p>
               <p>Points: {user.points}</p>
             </div>
+            {gameState.gamePhase === GamePhases.Lobby ?
             <div>
               <img src={user.ready ? IMG_READY: IMG_UNREADY} className="dark:invert h-7 w-7"></img>
             </div>
+            : <></>}
           </div>
         )}
     </div>
