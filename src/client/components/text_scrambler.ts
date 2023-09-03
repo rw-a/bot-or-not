@@ -16,9 +16,9 @@ interface ScrambleFrame {
 const GRAYED_OUT_COLOR = "#757575";
 const CHARS = '!<>-_\\/[]{}—=+*^?#________';
 
-const ANIMATION_FRAME_DURATION = 40;    // How long it takes for the characters to reach the new word
+const ANIMATION_FRAME_DURATION = 50;    // How long it takes for the characters to reach the new word
 const CHARACTER_SCRAMBLE_RATE = 0.28;   // How fast characters switch randomly
-const MIN_FRAME_DURATION = 17;          // Frames must be at least this long (ms), i.e. fps cap (1000 / 60 = 17)
+const MIN_FRAME_DURATION = 16;          // Frames must be at least this long (ms), i.e. fps cap (1000 / 60 = 17)
 
 export default class TextScrambler {
     el: HTMLElement
