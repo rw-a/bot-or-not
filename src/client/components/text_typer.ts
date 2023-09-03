@@ -42,9 +42,6 @@ export default class TextTyper {
         return promise;
     }
 
-    /*
-    * Precondition: this.queue.length > 0
-    */
     update(timestamp: DOMHighResTimeStamp) {
         // Set when the animation has started
         if (this.lastAnimationTime === undefined) {
@@ -59,10 +56,19 @@ export default class TextTyper {
             return;
         }
 
-        // Move char from queue to element text
-        this.el.innerText += this.queue[0];
-        this.queue = this.queue.slice(1);
+        // Move one char from queue to element text
+        // If the char is a white space, recursively add another char until a non-whitespace is added
+        let toAppend = ""; 
+        do {
+            if (this.queue.length === 0) {
+                break;
+            }
 
+            toAppend += this.queue[0];
+            this.queue = this.queue.slice(1);
+        } while (toAppend.trim().length === 0);
+        
+        this.el.innerText += toAppend;
 
         if (this.queue.length > 0) {
             // If not done
