@@ -185,20 +185,27 @@ interface MainPanelWritingProps {
 function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, submitAnswer}: MainPanelWritingProps) {
   const answerSaved = answer === submittedAnswer;
 
+  /* TODO: UI is garbage
+  Textarea needs indicator it can be typed in
+  Text area highlighted focus ring looks bad
+  Button needs indicator it can be pressed
+  */
+
   return (
     <div className="flex flex-col basis-full justify-between">
-    <div>
-      Prompt: {gameState.rounds[gameState.round].prompt}
+      <div className="px-1">
+        Prompt: {gameState.rounds[gameState.round].prompt}
+      </div>
+      <div className="flex flex-col w-full">
+        <textarea value={answer} onInput={onAnswerChange} 
+          className="w-full resize-none bg-inherit border-y-[1px] px-1"></textarea>
+        <button 
+          onClick={submitAnswer} 
+          disabled={answerSaved}
+          className={"" + (answerSaved ? "text-muted" : "")}
+        >{(submittedAnswer) ? "Resubmit" : "Submit"}</button>
+      </div>
     </div>
-    <div className="flex border-[1px] w-full">
-      <textarea value={answer} onInput={onAnswerChange} className="w-full resize-none"></textarea>
-      <button 
-        onClick={submitAnswer} 
-        disabled={answerSaved}
-        className={`border-[1px] border-${(answerSaved) ? "muted" : "success"} ${answerSaved ? "text-muted" : ""}`}
-       >{(submittedAnswer) ? "Resubmit" : "Submit"}</button>
-    </div>
-  </div>
   );
 }
 
