@@ -56,7 +56,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 ref={titleRef} className="text-2xl font-bold"></h1>
+      <h1 ref={titleRef} className="text-2xl font-bold">‎</h1>
       <div>
         <p className="text-lg font-medium">Username</p>
         <TextInput

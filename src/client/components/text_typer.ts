@@ -27,7 +27,7 @@ export default class TextTyper {
         }
 
         // Clear text
-        this.el.innerText = "";
+        this.el.innerText = "‎";
 
         // Make newText the target
         this.queue = newText;
