@@ -40,7 +40,7 @@ export function GamePage({
         seconds={seconds} 
         onReady={onReady} 
         onLeave={onLeave}
-        className="flex justify-between"
+        className="flex justify-between px-1"
       />
       <div className="flex">
         <SidePanel gameState={gameState} className="basis-1/4"/>
@@ -105,9 +105,6 @@ interface SidePanelProps {
 }
 
 function SidePanel({gameState, className}: SidePanelProps) {
-  /* TODO
-  Only show ready state in Lobby Phase
-  */
   return (
     <div className={className}>
         {Object.entries(gameState.users).map(([userID, user]) =>
