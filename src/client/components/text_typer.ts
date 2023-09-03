@@ -26,7 +26,7 @@ export default class TextTyper {
             return promise;
         }
 
-        // Clear text
+        // Clear text (have invisible character so the space is still taken up)
         this.el.innerText = "‎";
 
         // Make newText the target
