@@ -15,6 +15,7 @@ function App() {
   const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
 
+  const [isLoaded, setIsLoaded] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState({} as LoginError);
 
@@ -43,11 +44,6 @@ function App() {
   });
 
   useEffect(() => {
-    const storedSessionID = localStorage.getItem("sessionID");
-    if (storedSessionID) {
-      restoreSession(storedSessionID);
-    } 
-
     function onConnectError(error: Error) {
       /* Auto-connect is enabled. Maybe make an alert */
       console.error(error);
@@ -104,9 +100,17 @@ function App() {
       socket.on(eventName, eventHandler);
     }
 
+    // Useful for debugging
     socket.onAny((event, ...args) => {
       console.log(event, args);
     });
+
+    const storedSessionID = localStorage.getItem("sessionID");
+    if (storedSessionID) {
+      restoreSession(storedSessionID);
+    } else {
+      setIsLoaded(true);
+    }
 
     return () => {
       for (const [eventName, eventHandler] of Object.entries(EVENT_LISTENERS)) {
@@ -141,6 +145,7 @@ function App() {
         restart(new Date(new Date(gameState.timerStartTime).getTime() + PHASE_DURATIONS[gameState.gamePhase as 1|2|3] * 1000));
       }
     }
+    setIsLoaded(true);
   }
 
   function resetState() {
@@ -198,7 +203,9 @@ function App() {
 
   return (
     <div className="container mx-auto px-4 dark:text-white">
-      {(!isAuthenticated) ? 
+      {(!isLoaded) ?
+      <></>
+      : (!isAuthenticated) ? 
       <LoginPage 
         onLogin={onLogin} 
         loginError={loginError}
