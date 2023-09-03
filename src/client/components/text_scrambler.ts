@@ -25,6 +25,7 @@ export default class TextScrambler {
     queue: ScrambleFrame[]
     frame: number
     frameRequest: number
+    // @ts-ignore
     resolve: (value?: unknown) => void
     lastAnimationTime: DOMHighResTimeStamp | undefined
 
