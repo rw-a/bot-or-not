@@ -26,7 +26,7 @@ export default class TextScrambler {
     frame: number
     frameRequest: number
     // @ts-ignore
-    resolve: (value?: unknown) => void
+    resolve: (value?: void) => void
     lastAnimationTime: DOMHighResTimeStamp | undefined
 
     constructor(el: HTMLElement) {
@@ -44,7 +44,7 @@ export default class TextScrambler {
     setText(newText: string) {
         const oldText = this.el.innerText;
         const length = Math.max(oldText.length, newText.length);
-        const promise = new Promise(resolve => this.resolve = resolve);
+        const promise = new Promise<void>(resolve => this.resolve = resolve);
 
         // Create the list of character changes required
         this.queue = [];

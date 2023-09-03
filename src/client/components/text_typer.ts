@@ -6,7 +6,7 @@ export default class TextTyper {
     lastAnimationTime: DOMHighResTimeStamp | undefined
     frameRequest: number
     // @ts-ignore
-    resolve: (value?: unknown) => void
+    resolve: (value?: void) => void
 
     constructor(el: HTMLElement) {
         this.el = el;
@@ -19,7 +19,7 @@ export default class TextTyper {
     }
 
     setText(newText: string) {
-        const promise = new Promise(resolve => this.resolve = resolve);
+        const promise = new Promise<void>(resolve => this.resolve = resolve);
 
         // Don't bother doing animation if new text is blank
         if (newText.length === 0) {
