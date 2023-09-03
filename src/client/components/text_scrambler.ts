@@ -13,7 +13,7 @@ interface ScrambleFrame {
     char?: string
 }
 
-const GRAYED_OUT_COLOR = "#757575";
+const GRAYED_OUT_COLOR = "#94a3b8"; // OLD: #757575
 const CHARS = '!<>-_\\/[]{}—=+*^?#________';
 
 const ANIMATION_FRAME_DURATION = 50;    // How long it takes for the characters to reach the new word
