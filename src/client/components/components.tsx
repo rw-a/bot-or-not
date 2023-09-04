@@ -133,6 +133,11 @@ export function TerminalInput({username, answer, onAnswerChange, className}: Ter
     onAnswerChange(value);
   }
 
+  /* TODO
+  Remove the textarea and handle the input using only key event listeners
+  Implement caret using CSS animation
+  */ 
+
   useEffect(() => {
     // Make the cursor blink
     const timerID = setInterval(() => {

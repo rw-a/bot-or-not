@@ -4,6 +4,7 @@ import { GAME_PHASE_NAMES, LLM_INGAME_NAME, POINTS_PER_CORRECT_GUESS, POINTS_PER
 
 import IMG_READY from '../assets/ready.png';
 import IMG_UNREADY from '../assets/waiting.png';
+import { shuffleArray } from '../../utility';
 
 interface GamePageProps {
   gameState: GameState
@@ -222,32 +223,24 @@ interface MainPanelVoting {
 }
 
 function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, onVoteChange, submitVote}: MainPanelVoting) {
-  /* Maybe use grid instead */
-  /* TODO
-  */
+  // Create a list of user IDs with random order
+  const userIDs = Object.keys(gameState.users);
+  userIDs.push(gameState.llmUserID);
+  shuffleArray(userIDs, thisUserID);
+
   return (
   <div className="basis-full flex flex-col justify-between">
-    <div className="flex flex-row flex-wrap justify-around">
-      {Object.entries(gameState.users).map(([userID, user]) => 
+    <div className="flex flex-col flex-wrap justify-around">
+      {userIDs.map((userID) => 
       (thisUserID !== userID) ? 
-      <div 
-      key={userID} 
-      className={"cursor-pointer hover:bg-muted border-[1px]" 
-      + (submittedVote === userID ? " border-success" : "") 
-      + (vote === userID ? " bg-muted": "")} 
-      onClick={() => {onVoteChange(userID)}}>
-        <p>User: {user.username}</p>
-        <p>Response: {user.answers[gameState.round]}</p>
-      </div>
+      <VotingOption
+        gameState={gameState}
+        userID={userID}
+        vote={vote}
+        submittedVote={submittedVote}
+        onVoteChange={onVoteChange}
+      />
       : "")}
-      <div 
-      className={"cursor-pointer hover:bg-muted border-[1px]" 
-      + (submittedVote === gameState.llmUserID ? " border-success" : "") 
-      + (vote === gameState.llmUserID ? " bg-muted": "")} 
-      onClick={() => {onVoteChange(gameState.llmUserID)}}>
-        <p>User: LLM</p>
-        <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
-      </div>
     </div>
     <div className="flex flex-row justify-center border-t-[1px]">
       <ButtonTyper 
@@ -257,6 +250,32 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
       </ButtonTyper>
     </div>
   </div>
+  );
+}
+
+interface VotingOptionProps {
+  gameState: GameState
+  userID: UserID
+  vote: UserID
+  submittedVote: UserID
+  onVoteChange: (userID: UserID) => void
+}
+
+function VotingOption({gameState, userID, vote, submittedVote, onVoteChange}: VotingOptionProps) {
+  const isLLM = gameState.llmUserID == userID;
+  const response = (isLLM) ? 
+    gameState.rounds[gameState.round].llmResponse : 
+    gameState.users[userID].answers[gameState.round];
+
+  return (
+    <div 
+    key={userID} 
+    className={"cursor-pointer hover:bg-muted border-[1px]" 
+    + (submittedVote === userID ? " border-success" : "") 
+    + (vote === userID ? " bg-muted": "")} 
+    onClick={() => {onVoteChange(userID)}}>
+      <p>{response}</p>
+    </div>
   );
 }
 
