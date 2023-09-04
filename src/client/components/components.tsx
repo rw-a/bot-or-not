@@ -123,31 +123,34 @@ interface TerminalInputProps {
 }
 
 export function TerminalInput({username, answer, onAnswerChange, className}: TerminalInputProps) {
-  const [showSuffix, setShowSuffix] = useState(true);
+  const [showCursor, setShowCursor] = useState(true);
 
-  const shellPrompt = username + "@bot-or-not:~$ "
-  const suffix = (showSuffix) ? "▌" : ""
-  const textAreaValue = " ".repeat(shellPrompt.length) + answer + suffix;
+  const shellPrompt = username + "@bot-or-not:~$ ";
+  const textAreaValue = " ".repeat(shellPrompt.length) + answer;
 
   function onShellInput(event: React.FormEvent<HTMLTextAreaElement>) {
-    const value = event.currentTarget.value.slice(shellPrompt.length).replaceAll(suffix, "");
+    const value = event.currentTarget.value.slice(shellPrompt.length);
     onAnswerChange(value);
   }
 
   useEffect(() => {
     // Make the cursor blink
     const timerID = setInterval(() => {
-      setShowSuffix(!showSuffix);
-    }, 1000);
+      setShowCursor(!showCursor);
+    }, 700);
 
     return () => {
       clearInterval(timerID)
     };
-  }, [showSuffix]);
+  }, [showCursor]);
 
   return (
     <div className={className}>
-      <div className="fixed pl-1">{shellPrompt}</div>
+      <div className="fixed pl-1 -z-10">
+        {shellPrompt}
+        <span className="invisible">{"o".repeat(answer.length)}</span>
+        {(showCursor) ? "▌" : ""}
+      </div>
       <textarea value={textAreaValue} onInput={onShellInput} 
         className="w-full resize-none bg-inherit caret-transparent px-1"></textarea>
     </div>
