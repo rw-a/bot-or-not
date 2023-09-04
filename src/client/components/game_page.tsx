@@ -1,5 +1,4 @@
-import { FormEventHandler } from 'react';
-import { ButtonTyper } from './components';
+import { ButtonTyper, TerminalInput } from './components';
 import { GameState, GamePhases, UserID, RoomID, UserData } from '../../server/types';
 import { GAME_PHASE_NAMES, LLM_INGAME_NAME, POINTS_PER_CORRECT_GUESS, POINTS_PER_VOTE } from '../../config';
 
@@ -185,20 +184,12 @@ interface MainPanelWritingProps {
 }
 
 function MainPanelWriting({gameState, userID, answer, submittedAnswer, onAnswerChange, submitAnswer}: MainPanelWritingProps) {
-  const answerSaved = answer === submittedAnswer;
-
   /* TODO: UX is garbage
   Text area highlighted focus ring looks bad
   */
-
+  
+  const answerSaved = answer === submittedAnswer;
   const username = gameState.users[userID].username;
-  const shellPrompt = username + "@bot-or-not:~$ "
-  const textAreaValue = " ".repeat(shellPrompt.length) + answer;
-
-  function onShellInput(event: React.FormEvent<HTMLTextAreaElement>) {
-    const value = event.currentTarget.value.slice(shellPrompt.length);
-    onAnswerChange(value);
-  }
 
   return (
     <div className="flex flex-col basis-full justify-between">
@@ -206,11 +197,11 @@ function MainPanelWriting({gameState, userID, answer, submittedAnswer, onAnswerC
         Prompt: {gameState.rounds[gameState.round].prompt}
       </div>
       <div className="flex flex-col w-full">
-        <div className="border-y-[1px]">
-          <div className="fixed pl-1">{shellPrompt}</div>
-          <textarea value={textAreaValue} onInput={onShellInput} 
-            className="w-full resize-none bg-inherit px-1"></textarea>
-        </div>
+        <TerminalInput 
+          username={username} 
+          answer={answer} 
+          onAnswerChange={onAnswerChange}
+          className="border-y-[1px]"/>
         <ButtonTyper 
           onClick={submitAnswer} 
           disabled={answerSaved}

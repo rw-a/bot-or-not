@@ -76,7 +76,7 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
       if (currentlyDrawing) {
         textTyperRef.current.cancel();
       }
-      
+
       setCurrentlyDrawing(true);
       textTyperRef.current = new TextTyper(buttonRef.current);
       textTyperRef.current.setText(children).then(() => {
@@ -111,5 +111,45 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
       bg-zinc-100 dark:bg-zinc-900 disabled:bg-zinc-400 dark:disabled:bg-zinc-600\
       `}
     ></button>
+  );
+}
+
+
+interface TerminalInputProps {
+  username: string
+  answer: string
+  onAnswerChange: (newAnswer: string) => void
+  className: string
+}
+
+export function TerminalInput({username, answer, onAnswerChange, className}: TerminalInputProps) {
+  const [showSuffix, setShowSuffix] = useState(true);
+
+  const shellPrompt = username + "@bot-or-not:~$ "
+  const suffix = (showSuffix) ? "▌" : ""
+  const textAreaValue = " ".repeat(shellPrompt.length) + answer + suffix;
+
+  function onShellInput(event: React.FormEvent<HTMLTextAreaElement>) {
+    const value = event.currentTarget.value.slice(shellPrompt.length).replaceAll(suffix, "");
+    onAnswerChange(value);
+  }
+
+  useEffect(() => {
+    // Make the cursor blink
+    const timerID = setInterval(() => {
+      setShowSuffix(!showSuffix);
+    }, 1000);
+
+    return () => {
+      clearInterval(timerID)
+    };
+  }, [showSuffix]);
+
+  return (
+    <div className={className}>
+      <div className="fixed pl-1">{shellPrompt}</div>
+      <textarea value={textAreaValue} onInput={onShellInput} 
+        className="w-full resize-none bg-inherit caret-transparent px-1"></textarea>
+    </div>
   );
 }
