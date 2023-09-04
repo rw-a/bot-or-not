@@ -1,4 +1,4 @@
-import { useState, ChangeEventHandler, MouseEventHandler, useRef } from 'react';
+import { useState, ChangeEventHandler, MouseEventHandler, useRef, useEffect } from 'react';
 import TextTyper from './text_typer';
 
 
@@ -66,6 +66,7 @@ export function Button({disabled, children, onClick, className}: ButtonProps) {
 
 export function ButtonTyper({disabled, children, onClick, className}: ButtonProps) {
   const buttonRef = useRef(null);
+  const textTyperRef = useRef(null as unknown as TextTyper);
 
   // Prevents the text from being redrawn while it is currently still typing
   const [currentlyDrawing, setCurrentlyDrawing] = useState(false);
@@ -73,12 +74,20 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
   function redraw() {
     if (buttonRef.current && !currentlyDrawing) {
       setCurrentlyDrawing(true);
-      const textTyper = new TextTyper(buttonRef.current);
-      textTyper.setText(children).then(() => {
+      textTyperRef.current = new TextTyper(buttonRef.current);
+      textTyperRef.current.setText(children).then(() => {
         setCurrentlyDrawing(false);
       });
     }
   }
+
+  useEffect(() => {
+    if (buttonRef.current) {
+      // @ts-ignore Probably violates react principles of mutating stuff directly
+      buttonRef.current.innerText = children;
+    }
+    redraw();
+  }, [children]);
 
   return (
     <button
@@ -91,6 +100,6 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
         px-5 py-1 leading-5 font-semibold \
       bg-zinc-100 dark:bg-zinc-900 disabled:bg-zinc-400 dark:disabled:bg-zinc-600\
       `}
-    >{children}</button>
+    ></button>
   );
 }

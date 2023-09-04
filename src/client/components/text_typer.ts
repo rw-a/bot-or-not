@@ -92,6 +92,8 @@ export default class TextTyper {
         } else {
             // If done
             this.el.innerHTML = this.currentText;
+            // @ts-ignore
+            this.el.style.width = null;
             this.resolve();
         }
     }
