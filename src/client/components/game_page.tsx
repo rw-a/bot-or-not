@@ -1,5 +1,5 @@
 import { FormEventHandler } from 'react';
-import { Button } from './components';
+import { ButtonTyper } from './components';
 import { GameState, GamePhases, UserID, RoomID, UserData } from '../../server/types';
 import { GAME_PHASE_NAMES, LLM_INGAME_NAME, POINTS_PER_CORRECT_GUESS, POINTS_PER_VOTE } from '../../config';
 
@@ -83,13 +83,13 @@ function TopBar({gameState, roomID, userID, minutes, seconds, onReady, onLeave, 
   return (
     <div className={className}>
       {gameState.gamePhase === GamePhases.Lobby || gameState.gamePhase === GamePhases.End ? <>
-        <Button onClick={onLeave}>Leave</Button>
+        <ButtonTyper onClick={onLeave}>exit</ButtonTyper>
       </> : <>
       <p>Time Remaining: {minutes * 60 + seconds}</p>
       </>}
 
       {gameState.gamePhase === GamePhases.Lobby ? <>
-        <Button onClick={onReady}>{(userReady) ? "Unready" : "Ready"}</Button>
+        <ButtonTyper onClick={onReady}>{(userReady) ? "unready" : "ready"}</ButtonTyper>
         <p>Room Code: {roomID}</p>
       </> : <>
         <p>{GAME_PHASE_NAMES[gameState.gamePhase]}</p>
@@ -199,11 +199,11 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
       <div className="flex flex-col w-full">
         <textarea value={answer} onInput={onAnswerChange} 
           className="w-full resize-none bg-inherit border-y-[1px] px-1"></textarea>
-        <button 
+        <ButtonTyper 
           onClick={submitAnswer} 
           disabled={answerSaved}
           className={"" + (answerSaved ? "text-muted" : "")}
-        >{(submittedAnswer) ? "Resubmit" : "Submit"}</button>
+        >{(submittedAnswer) ? "Resubmit" : "Submit"}</ButtonTyper>
       </div>
     </div>
   );
@@ -247,7 +247,11 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
       </div>
     </div>
     <div className="flex flex-row justify-center">
-      <Button disabled={submittedVote === vote && Boolean(submittedVote)} onClick={submitVote}>{submittedVote !== vote && submittedVote ? "Change Vote" : "Submit Vote"}</Button>
+      <ButtonTyper 
+        disabled={submittedVote === vote && Boolean(submittedVote)} 
+        onClick={submitVote}>
+        {submittedVote !== vote && submittedVote ? "Change Vote" : "Submit Vote"}
+      </ButtonTyper>
     </div>
   </div>
   );

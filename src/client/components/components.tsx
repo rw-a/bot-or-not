@@ -88,7 +88,7 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
       onMouseEnter={redraw}
       ref={buttonRef}
       className={(className ?? "") + `\
-        px-5 py-1 leading-5 rounded-md font-semibold \
+        px-5 py-1 leading-5 font-semibold \
       bg-zinc-100 dark:bg-zinc-900 disabled:bg-zinc-400 dark:disabled:bg-zinc-600\
       `}
     >{children}</button>
