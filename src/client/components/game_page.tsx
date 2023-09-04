@@ -270,7 +270,7 @@ function VotingOption({gameState, userID, vote, submittedVote, onVoteChange}: Vo
   return (
     <div 
     key={userID} 
-    className={"cursor-pointer hover:bg-muted border-[1px]" 
+    className={"cursor-pointer hover:bg-muted border-[1px] px-1 mx-2 my-1" 
     + (submittedVote === userID ? " border-success" : "") 
     + (vote === userID ? " bg-muted": "")} 
     onClick={() => {onVoteChange(userID)}}>
