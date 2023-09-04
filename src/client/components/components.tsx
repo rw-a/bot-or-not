@@ -72,12 +72,22 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
   const [currentlyDrawing, setCurrentlyDrawing] = useState(false);
 
   function redraw() {
-    if (buttonRef.current && !currentlyDrawing) {
+    if (buttonRef.current) {
+      if (currentlyDrawing) {
+        textTyperRef.current.cancel();
+      }
+      
       setCurrentlyDrawing(true);
       textTyperRef.current = new TextTyper(buttonRef.current);
       textTyperRef.current.setText(children).then(() => {
         setCurrentlyDrawing(false);
       });
+    }
+  }
+
+  function onMouseEnter() {
+    if (!currentlyDrawing) {
+      redraw();
     }
   }
 
@@ -94,7 +104,7 @@ export function ButtonTyper({disabled, children, onClick, className}: ButtonProp
       title={children}
       disabled={disabled}
       onClick={onClick}
-      onMouseEnter={redraw}
+      onMouseEnter={onMouseEnter}
       ref={buttonRef}
       className={(className ?? "") + `\
         px-5 py-1 leading-5 font-semibold \

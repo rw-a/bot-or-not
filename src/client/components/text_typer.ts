@@ -44,7 +44,7 @@ export default class TextTyper {
         this.frameDuration = Math.floor(ANIMATION_TOTAL_DURATION / newText.replace(" ", "").length);
 
         // Cancel any currently running animation
-        cancelAnimationFrame(this.frameRequest);
+        this.cancel();
 
         // Start a new animation
         this.lastAnimationTime = undefined;
@@ -96,5 +96,9 @@ export default class TextTyper {
             this.el.style.width = null;
             this.resolve();
         }
+    }
+
+    cancel() {
+        cancelAnimationFrame(this.frameRequest);
     }
 }
