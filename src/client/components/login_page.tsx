@@ -62,7 +62,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
         <TextInput
           required
           value={username}
-          placeholder='Enter your username...'
+          placeholder='enter your username...'
           onChange={handleUsernameChange}
           verify={triedLogin}
           errorText={(loginError.errorType === "username") ? loginError.errorMessage : ""}
@@ -74,7 +74,7 @@ export function LoginPage({ onLogin, loginError }: LoginPageProps) {
           <TextInput
             required
             value={roomID}
-            placeholder='Enter a room code...'
+            placeholder='enter a room code...'
             onChange={handleRoomIDChange}
             verify={Boolean(loginError.errorMessage) || triedJoin}
             errorText={(loginError.errorType === "room") ? loginError.errorMessage : ""}
