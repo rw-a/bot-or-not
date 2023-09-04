@@ -10,6 +10,10 @@ export default class TextTyper {
     resolve: (value?: void) => void
 
     constructor(el: HTMLElement) {
+        // Prevent element from changing width
+        el.style.width = el.clientWidth + "px";
+        el.style.whiteSpace = "nowrap";
+
         this.el = el;
 
         this.currentText = "";
@@ -29,7 +33,7 @@ export default class TextTyper {
         }
 
         // Clear text (have invisible character so the space is still taken up)
-        this.el.innerHTML = `<span style="visibility: hidden">${newText}</span>`;
+        this.el.innerHTML = "▌" + `<span style="visibility: hidden">${newText.slice(1)}</span>`;
 
         // Make newText the target
         this.queue = newText;
@@ -74,14 +78,15 @@ export default class TextTyper {
 
         // Pad the text so that the element's width remains the same
         // Relies on the font being monospace
-        this.el.innerHTML = this.currentText + 
-            '<span style="visibility: hidden">' + "o".repeat(this.queue.length); + '</span>'
+        this.el.innerHTML = this.currentText + "▌"
+            + '<span style="visibility: hidden">' + "o".repeat(Math.max(this.queue.length - 1, 0)); + '</span>';
 
         if (this.queue.length > 0) {
             // If not done
             this.frameRequest = requestAnimationFrame(this.update);
         } else {
             // If done
+            this.el.innerHTML = this.currentText;
             this.resolve();
         }
     }
