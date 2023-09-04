@@ -18,7 +18,7 @@ interface GamePageProps {
   submittedVote: UserID
   onReady: () => void
   onLeave: () => void
-  onAnswerChange: FormEventHandler<HTMLTextAreaElement>
+  onAnswerChange: (newAnswer: string) => void
   submitAnswer: () => void
   onVoteChange: (userID: UserID) => void
   submitVote: () => void
@@ -131,7 +131,7 @@ interface MainPanelProps {
   submittedAnswer: string
   vote: UserID
   submittedVote: UserID
-  onAnswerChange: FormEventHandler<HTMLTextAreaElement>
+  onAnswerChange: (newAnswer: string) => void
   submitAnswer: () => void
   onVoteChange: (userID: UserID) => void
   submitVote: () => void
@@ -151,6 +151,7 @@ function MainPanel({
       </> : (gameState.gamePhase === GamePhases.Writing) ? <>
         <MainPanelWriting 
           gameState={gameState} 
+          userID={userID}
           answer={answer} 
           submittedAnswer={submittedAnswer} 
           onAnswerChange={onAnswerChange} 
@@ -176,20 +177,28 @@ function MainPanel({
 
 interface MainPanelWritingProps {
   gameState: GameState
+  userID: UserID
   answer: string
   submittedAnswer: string
-  onAnswerChange: FormEventHandler<HTMLTextAreaElement>
+  onAnswerChange: (newAnswer: string) => void
   submitAnswer: () => void
 }
 
-function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, submitAnswer}: MainPanelWritingProps) {
+function MainPanelWriting({gameState, userID, answer, submittedAnswer, onAnswerChange, submitAnswer}: MainPanelWritingProps) {
   const answerSaved = answer === submittedAnswer;
 
-  /* TODO: UI is garbage
-  Textarea needs indicator it can be typed in
+  /* TODO: UX is garbage
   Text area highlighted focus ring looks bad
-  Button needs indicator it can be pressed
   */
+
+  const username = gameState.users[userID].username;
+  const shellPrompt = username + "@bot-or-not:~$ "
+  const textAreaValue = " ".repeat(shellPrompt.length) + answer;
+
+  function onShellInput(event: React.FormEvent<HTMLTextAreaElement>) {
+    const value = event.currentTarget.value.slice(shellPrompt.length);
+    onAnswerChange(value);
+  }
 
   return (
     <div className="flex flex-col basis-full justify-between">
@@ -197,13 +206,16 @@ function MainPanelWriting({gameState, answer, submittedAnswer, onAnswerChange, s
         Prompt: {gameState.rounds[gameState.round].prompt}
       </div>
       <div className="flex flex-col w-full">
-        <textarea value={answer} onInput={onAnswerChange} 
-          className="w-full resize-none bg-inherit border-y-[1px] px-1"></textarea>
+        <div className="border-y-[1px]">
+          <div className="fixed pl-1">{shellPrompt}</div>
+          <textarea value={textAreaValue} onInput={onShellInput} 
+            className="w-full resize-none bg-inherit px-1"></textarea>
+        </div>
         <ButtonTyper 
           onClick={submitAnswer} 
           disabled={answerSaved}
           className={"" + (answerSaved ? "text-muted" : "")}
-        >{(submittedAnswer) ? "Resubmit" : "Submit"}</ButtonTyper>
+        >{(submittedAnswer) ? "resubmit" : "submit"}</ButtonTyper>
       </div>
     </div>
   );
@@ -246,11 +258,11 @@ function MainPanelVoting({gameState, userID: thisUserID, vote, submittedVote, on
         <p>Response: {gameState.rounds[gameState.round].llmResponse}</p>
       </div>
     </div>
-    <div className="flex flex-row justify-center">
+    <div className="flex flex-row justify-center border-t-[1px]">
       <ButtonTyper 
         disabled={submittedVote === vote && Boolean(submittedVote)} 
         onClick={submitVote}>
-        {submittedVote !== vote && submittedVote ? "Change Vote" : "Submit Vote"}
+        {submittedVote !== vote && submittedVote ? "change-vote" : "submit-vote"}
       </ButtonTyper>
     </div>
   </div>

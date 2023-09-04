@@ -182,8 +182,8 @@ function App() {
     }
   }
 
-  function onAnswerChange(event: React.FormEvent<HTMLTextAreaElement>) {
-    setAnswer(event.currentTarget.value);
+  function onAnswerChange(newAnswer: string) {
+    setAnswer(newAnswer);
   }
 
   function submitAnswer() {
