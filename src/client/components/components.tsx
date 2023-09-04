@@ -1,4 +1,5 @@
-import { useState, ChangeEventHandler, MouseEventHandler } from 'react';
+import { useState, ChangeEventHandler, MouseEventHandler, useRef } from 'react';
+import TextTyper from './text_typer';
 
 
 interface TextInputProps {
@@ -50,11 +51,26 @@ interface ButtonProps {
 }
 
 export function Button({disabled, children, onClick, className}: ButtonProps) {
+  const buttonRef = useRef(null);
+  const [currentlyDrawing, setCurrentlyDrawing] = useState(false);
+
+  function redraw() {
+    if (buttonRef.current && !currentlyDrawing) {
+      setCurrentlyDrawing(true);
+      const textTyper = new TextTyper(buttonRef.current);
+      textTyper.setText(children).then(() => {
+        setCurrentlyDrawing(false);
+      });
+    }
+  }
+
   return (
     <button
       title={children}
       disabled={disabled}
       onClick={onClick}
+      onMouseEnter={redraw}
+      ref={buttonRef}
       className={(className ?? "") + `
         px-5 py-2.5 text-sm leading-5 rounded-md font-semibold 
         text-white bg-primary hover:bg-primary-dark disabled:bg-primary-light disabled:hover:bg-primary
