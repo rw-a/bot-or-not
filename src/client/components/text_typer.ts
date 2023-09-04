@@ -1,8 +1,9 @@
-const MIN_FRAME_DURATION = 16;
+const MIN_FRAME_DURATION = 32;
 
 export default class TextTyper {
     el: HTMLElement
     queue: string
+    currentText: string
     lastAnimationTime: DOMHighResTimeStamp | undefined
     frameRequest: number
     // @ts-ignore
@@ -11,6 +12,7 @@ export default class TextTyper {
     constructor(el: HTMLElement) {
         this.el = el;
 
+        this.currentText = "";
         this.queue = "";
         this.frameRequest = 0;
         this.lastAnimationTime = undefined;
@@ -27,7 +29,7 @@ export default class TextTyper {
         }
 
         // Clear text (have invisible character so the space is still taken up)
-        this.el.innerText = "‎";
+        this.el.innerHTML = `<span style="visibility: hidden">${newText}</span>`;
 
         // Make newText the target
         this.queue = newText;
@@ -68,7 +70,12 @@ export default class TextTyper {
             this.queue = this.queue.slice(1);
         } while (toAppend.trim().length === 0);
         
-        this.el.innerText += toAppend;
+        this.currentText += toAppend;
+
+        // Pad the text so that the element's width remains the same
+        // Relies on the font being monospace
+        this.el.innerHTML = this.currentText + 
+            '<span style="visibility: hidden">' + "o".repeat(this.queue.length); + '</span>'
 
         if (this.queue.length > 0) {
             // If not done
