@@ -1,11 +1,12 @@
-const MIN_FRAME_DURATION = 32;
+const ANIMATION_TOTAL_DURATION = 500;   // How long each animation should be (ms)
 
 export default class TextTyper {
-    el: HTMLElement
-    queue: string
-    currentText: string
-    lastAnimationTime: DOMHighResTimeStamp | undefined
-    frameRequest: number
+    el: HTMLElement         // The HTML element which is being animated on
+    queue: string           // The characters that still need to be typed out
+    currentText: string     // The characters that have already been typed out
+    lastAnimationTime: DOMHighResTimeStamp | undefined  //  The time of the last made update
+    frameRequest: number    // The frame number of the last made update
+    frameDuration: number   // How long each animation frame is (ms)
     // @ts-ignore
     resolve: (value?: void) => void
 
@@ -20,6 +21,7 @@ export default class TextTyper {
         this.queue = "";
         this.frameRequest = 0;
         this.lastAnimationTime = undefined;
+        this.frameDuration = 32;
 
         this.update = this.update.bind(this);
     }
@@ -38,6 +40,9 @@ export default class TextTyper {
         // Make newText the target
         this.queue = newText;
 
+        // Set speed such that total animation length is always roughly the same
+        this.frameDuration = Math.floor(ANIMATION_TOTAL_DURATION / newText.replace(" ", "").length);
+
         // Cancel any currently running animation
         cancelAnimationFrame(this.frameRequest);
 
@@ -55,7 +60,7 @@ export default class TextTyper {
         }
 
         // Limit animation speed
-        if (timestamp - this.lastAnimationTime > MIN_FRAME_DURATION) {
+        if (timestamp - this.lastAnimationTime > this.frameDuration) {
             this.lastAnimationTime = timestamp;
         } else {
             this.frameRequest = requestAnimationFrame(this.update);
